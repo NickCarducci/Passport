@@ -35,7 +35,7 @@ struct ContentView: View {
     
     init() {
         // Use Firebase library to configure APIs
-        //FirebaseApp.configure()
+        FirebaseApp.configure()
         
     }
 
