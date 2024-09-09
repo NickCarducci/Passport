@@ -42,6 +42,22 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             return
         }
     }
+    func application(_ app: UIApplication,
+                     open url: URL,
+                     options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+      // [END application_open]
+        return true
+    }
+    func application(_ application: UIApplication,
+                     configurationForConnecting connectingSceneSession: UISceneSession,
+                     options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+      // Called when a new scene session is being created.
+      // Use this method to select a configuration to create the new scene with.
+      return UISceneConfiguration(
+        name: "Default Configuration",
+        sessionRole: connectingSceneSession.role
+      )
+    }
     /*func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
         print("application is starting up. ApplicationDelegate didFinishLaunchingWithOptions.")
@@ -66,33 +82,41 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         return true
       }
       return false
-    }
+    }*/
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         print("Yay! Got a device token 🥳 \(deviceToken)")
         print("\(#function)")
-        Auth.auth().setAPNSToken(deviceToken, type: .sandbox)
+        Auth.auth().setAPNSToken(deviceToken, type: .unknown)//.sandbox
         //Messaging.messaging().setAPNSToken(deviceToken, type: .unknown)
-    }*/
+    }
 }
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
   //var window: UIWindow?
 
-  func scene(_ scene: UIScene, willConnectTo session: UISceneSession,
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession,
              options connectionOptions: UIScene.ConnectionOptions) {
       //guard let windowScene = (scene as? UIWindowScene) else { return }
-  }
+    }
 
-  // Implementing this delegate method is needed when swizzling is disabled.
-  // Without it, reCAPTCHA's login view controller will not dismiss.
-  func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+      if let incomingURL = userActivity.webpageURL {
+        handleIncomingDynamicLink(incomingURL)
+      }
+    }
+    private func handleIncomingDynamicLink(_ incomingURL: URL) {
+      let _ = incomingURL.absoluteString
+    }
+    // Implementing this delegate method is needed when swizzling is disabled.
+    // Without it, reCAPTCHA's login view controller will not dismiss.
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
     for urlContext in URLContexts {
       let url = urlContext.url
       _ = Auth.auth().canHandle(url)
     }
 
     // URL not auth related; it should be handled separately.
-  }
+    }
 
 
 }
