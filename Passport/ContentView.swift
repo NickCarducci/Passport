@@ -7,9 +7,36 @@
 import Foundation
 import PromiseKit
 import SwiftUI
-import FirebaseCore
+import Firebase
 import FirebaseAuth
+import CodeScanner
 //import FirebaseMessaging
+extension UIScreen{
+   static let screenWidth = UIScreen.main.bounds.size.width
+   static let screenHeight = UIScreen.main.bounds.size.height
+   static let screenSize = UIScreen.main.bounds.size
+}
+struct Event {
+    var id: String
+    var title: String
+    var date: String
+    var body: String
+}
+extension Event: Decodable {
+    enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case title = "title"
+        case date = "date"
+        case body = "body"
+    }
+    init(from decoder: Decoder) throws {
+        let podcastContainer = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try podcastContainer.decode(String.self, forKey: .id)
+        self.title = try podcastContainer.decode(String.self, forKey: .title)
+        self.date = try podcastContainer.decode(String.self, forKey: .date)
+        self.body = try podcastContainer.decode(String.self, forKey: .body)
+    }
+}
 
 enum FirebaseError: Error {
     case Error
@@ -33,9 +60,12 @@ struct ContentView: View {
     @GestureState private var isTapped = false
     //@State var session: User = User(coder: NSCoder())!
     
+    @State private var rocks = [Event]()
+    @State public var show: String = "home"
     init() {
         // Use Firebase library to configure APIs
         FirebaseApp.configure()
+        self.microsoftProvider = OAuthProvider(providerID: "microsoft.com")
         
     }
 
@@ -51,9 +81,67 @@ struct ContentView: View {
     
         loggedin = false
     }
-    
+    var microsoftProvider : OAuthProvider?
+    func signIn () {
+
+        self.microsoftProvider?.getCredentialWith(_: nil){credential, error in
+
+            if error != nil {
+                // Handle error.
+                print(error?.localizedDescription ?? "")
+            }
+
+            if let credential = credential {
+
+                Auth.auth().signIn(with: credential) { (authResult, error) in
+
+                    if error != nil {
+                        // Handle error.
+                    }
+
+                    guard let authResult = authResult else {
+                        print("Couldn't get graph authResult")
+                        return
+                    }
+
+                    print(authResult.user)
+
+                    // get credential and token when login successfully
+                    let microCredential = authResult.credential as! OAuthCredential
+                    let token = microCredential.accessToken!
+
+                    // use token to call Microsoft Graph API
+                    // ...
+                }
+            }
+        }
+    }
+    func getEvents () {
+        
+        rocks = []
+        let db = Firestore.firestore()
+        db.collection("events")//.whereField("city", isEqualTo: placename)
+            .getDocuments() { (querySnapshot, error) in
+                        if let error = error {
+                                print("Error getting documents: \(error)")
+                        } else {
+                                if querySnapshot!.documents.isEmpty {
+                                    return print("is empty")
+                                }
+                            
+                                for document in querySnapshot!.documents {
+                                        //print("\(document.documentID): \(document.data())")
+                                    let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",body: document["body"] as? String ?? "")
+                                    //print(post)
+                                    
+                                    rocks.append(event)
+                                    
+                                }
+                        }
+                }
+    }
     var body: some View {
-        if Auth.auth().currentUser == nil {
+        if Auth.auth().currentUser == nil && !loggedin {
             Form{
                 Section(footer: Text("Get an SMS code. Standard messaging rates apply.")) {
                     TextField("Country code", text: $countryCodeNumber)
@@ -94,7 +182,7 @@ struct ContentView: View {
                         
                         //testing = true
                         //Auth.auth().settings?.isAppVerificationDisabledForTesting = true
-                        let _ = PhoneAuthProvider.provider(auth: Auth.auth())
+                        /*let _ = PhoneAuthProvider.provider(auth: Auth.auth())
                         PhoneAuthProvider.provider().verifyPhoneNumber(
                             countryCodeNumber + phoneNumber, uiDelegate: nil) { verificationID, error in
                             if error != nil {
@@ -107,7 +195,8 @@ struct ContentView: View {
                             }
                             verificationId = verificationID
                             verifiable = true
-                        }
+                        }*/
+                        verifiable = true
                         /*firstly {
                             signUp(phoneNumber: countryCodeNumber + phoneNumber)
                         }.done(on: DispatchQueue.main) { id in
@@ -116,7 +205,7 @@ struct ContentView: View {
                             print(error.localizedDescription)
                         }*/
                     } else {
-                        let credential = PhoneAuthProvider.provider().credential(
+                        /*let credential = PhoneAuthProvider.provider().credential(
                           withVerificationID: verificationId,
                           verificationCode: smsTextCode
                         )
@@ -130,23 +219,90 @@ struct ContentView: View {
                                 return
                             }
                             _ = authResult
-                        }
+                         loggedin = true
+                        }*/
+                        loggedin = true
                     }
                     
                     
                 })
+                Section(footer: Text("Sign in with Microsoft.")) {
+                    Button(action: signIn) {
+                        Text("Sign in with Microsoft")
+                    }
+                }
             }
         }
         if(testing){
             Text(countryCodeNumber + phoneNumber)
         }
-        if Auth.auth().currentUser != nil {
-            Text("logout")
+        
+        if Auth.auth().currentUser != nil || loggedin {
+            if show == "list"{
+                VStack(alignment: .leading) {
+                    Text("Events")
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .offset(x: show == "list" ? 0 : -UIScreen.screenWidth)
+            }
+            if show == "leaderboard"{
+                VStack(alignment: .leading) {
+                    Text("Leaderboard")
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .offset(x: show == "leaderboard" ? 0 : UIScreen.screenWidth)
+            }
+            if show == "home" {
+                NavigationView {
+                    Text("Event description")
+                        .navigationTitle("Event title")
+                        .toolbar(content: {
+                            // 1
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                
+                                Button(action: {
+                                    print("Trailing button tapped")
+                                    show = "leaderboard"
+                                }) {
+                                    Image(systemName: "person")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            // 2
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                
+                                Button(action: {
+                                    print("Leading button tapped")
+                                    show = "list"
+                                }) {
+                                    Image(systemName: "list.dash")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                        })
+                }
+                CodeScannerView(codeTypes: [.qr], simulatedData: "PUCYMbQTTVlmTitXH8nO") { response in
+                    switch response {
+                    case .success(let result):
+                        print("Found event ID: \(result.string)")
+                    case .failure(let error):
+                        print(error.localizedDescription)
+                    }
+                }
+            }
+            Text(show != "home" ? "back" : "logout")
                 .font(Font.system(size: 15))
                 .fontWeight(.semibold)
                 .frame(width: nil, height: nil, alignment: .leading)
                 .onTapGesture {
-                    signOut()
+                    
+                    if show == "home"{
+                        //signOut()
+                        loggedin = false
+                        verifiable = false
+                    } else {
+                        show = "home"
+                    }
                 }
         }
     }

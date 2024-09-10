@@ -99,14 +99,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
       //guard let windowScene = (scene as? UIWindowScene) else { return }
     }
 
-    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+    /*func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
       if let incomingURL = userActivity.webpageURL {
         handleIncomingDynamicLink(incomingURL)
       }
     }
     private func handleIncomingDynamicLink(_ incomingURL: URL) {
       let _ = incomingURL.absoluteString
-    }
+    }*/
     // Implementing this delegate method is needed when swizzling is disabled.
     // Without it, reCAPTCHA's login view controller will not dismiss.
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
