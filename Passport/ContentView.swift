@@ -165,8 +165,9 @@ struct ContentView: View {
                     print(authResult.user)
 
                     // get credential and token when login successfully
-                    let microCredential = authResult.credential as! OAuthCredential
-                    let token = microCredential.accessToken!
+                    // uncomment this for warning
+                    //let microCredential = authResult.credential as! OAuthCredential
+                    //let _ = microCredential.accessToken!
 
                     // use token to call Microsoft Graph API
                     // ...
