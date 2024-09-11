@@ -98,6 +98,7 @@ struct ContentView: View {
     
     @State var verificationCode = ""
     @State var verificationID = ""
+    @State var newUsername = ""
     @State var phoneNumber = ""
     @State var countryCodeNumber = "+1"
     @State var country = ""
@@ -440,6 +441,46 @@ struct ContentView: View {
             }
             if show == "leaderboard"{
                 VStack(alignment: .leading) {
+                    Form{
+                        Section(footer: Text("Your username may appear on the leaderboard.")) {
+                            TextField("Username", text: $newUsername)
+                                .font(Font.system(size: 15))
+                                .fontWeight(.semibold)
+                                .frame(width: nil, height: nil, alignment: .leading)
+                                .onChange(of: newUsername) {
+                                    //verifiable = false
+                                }
+                            Button("Save", action: {
+                                Task {do {
+                                    let querySnapshot = try await db.collection("leaders").whereField("username", isEqualTo: newUsername)
+                                      .getDocuments()
+                                    for document in querySnapshot.documents {
+                                      print("\(document.documentID) => \(document.data())")
+                                    }
+                                    if querySnapshot.documents.isEmpty {
+                                        print("saving username")
+                                        let leaderRef = db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "")
+                                        
+                                        // Set the "username" field of the leader 'newUsername'
+                                        do {
+                                            try await leaderRef.updateData([
+                                                "username": newUsername
+                                            ])
+                                            print("Document successfully updated")
+                                        } catch {
+                                            print("Error updating document: \(error)")
+                                        }
+                                    } else {
+                                        print("username already exists")
+                                    }
+                                  } catch {
+                                    print("Error getting documents: \(error)")
+                                  }
+                                            
+                                }
+                            })
+                        }
+                    }
                     Text("Leaderboard")
                         .onTapGesture {
                             getLeaders()
