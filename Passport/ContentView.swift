@@ -10,11 +10,31 @@ import SwiftUI
 import Firebase
 import FirebaseAuth
 import CodeScanner
+let db = Firestore.firestore()
 //import FirebaseMessaging
 extension UIScreen{
    static let screenWidth = UIScreen.main.bounds.size.width
    static let screenHeight = UIScreen.main.bounds.size.height
    static let screenSize = UIScreen.main.bounds.size
+}
+func dateFromString (date: String) -> Date {
+    // create dateFormatter with UTC time format
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
+    let date = dateFormatter.date(from: date) ?? Date.now
+    return date
+}
+struct EventView: View {
+    @Binding public var title:String
+    @Binding public var bodyy:String
+    @Binding public var date:String
+    let defaults = UserDefaults.standard
+    var body: some View {
+        HStack{
+            Text("\(dateFromString(date:date)) \(title):\(bodyy)")
+                .padding(10)
+        }
+    }
 }
 struct Event {
     var id: String
@@ -62,6 +82,10 @@ struct ContentView: View {
     
     @State private var rocks = [Event]()
     @State public var show: String = "home"
+    @State public var openedEvent: String = ""
+    @State public var eventTitle: String = "Scan a QR code"
+    @State public var eventBody: String = ""
+
     init() {
         // Use Firebase library to configure APIs
         FirebaseApp.configure()
@@ -137,8 +161,48 @@ struct ContentView: View {
                                     rocks.append(event)
                                     
                                 }
+                            rocks.sort {
+                                dateFromString(date: $0.date) < dateFromString(date: $1.date)
+                            }
                         }
                 }
+    }
+    func openEvent (eventId: String) {
+        
+        Task {
+            let docRef = db.collection("events").document(eventId)
+            
+            do {
+                let document = try await docRef.getDocument()
+                if document.exists {
+                    let dataDescription = document.data().map(String.init(describing:)) ?? "nil"
+                    print("Document data: \(dataDescription)")
+                    let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",body: document["body"] as? String ?? "")
+                    eventTitle = event.title
+                    eventBody = event.body
+                    
+                } else {
+                    print("Document does not exist")
+                }
+            } catch {
+                print("Error getting document: \(error)")
+            }
+        }
+    }
+    func attendEvent (eventId:String) {
+        Task {
+            let eventRef = db.collection("events").document(eventId)
+            
+            // Set the "capital" field of the city 'DC'
+            do {
+                try await eventRef.updateData([
+                    "attendees": FieldValue.arrayUnion([Auth.auth().currentUser?.uid ?? ""])
+                ])
+                print("Document successfully updated")
+            } catch {
+                print("Error updating document: \(error)")
+            }
+        }
     }
     var body: some View {
         if Auth.auth().currentUser == nil && !loggedin {
@@ -241,6 +305,29 @@ struct ContentView: View {
             if show == "list"{
                 VStack(alignment: .leading) {
                     Text("Events")
+                        .onTapGesture {
+                            getEvents()
+                        }
+                    
+                    GeometryReader { geometry in
+                        ScrollView {
+                            List {
+                                ForEach ($rocks.indices, id: \.self){ index in
+                                    EventView(title:$rocks[index].title,bodyy:$rocks[index].body,
+                                              date:$rocks[index].date
+                                    )
+                                    .onTapGesture {
+                                        openedEvent = rocks[index].id
+                                        openEvent(eventId:openedEvent)
+                                        show = "home"
+                                    }
+                                }
+                            }
+                            .frame(width: geometry.size.width,
+                                   height: geometry.size.height)
+                        }
+                        .frame(height: .infinity)
+                    }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .offset(x: show == "list" ? 0 : -UIScreen.screenWidth)
@@ -254,8 +341,8 @@ struct ContentView: View {
             }
             if show == "home" {
                 NavigationView {
-                    Text("Event description")
-                        .navigationTitle("Event title")
+                    Text(eventBody)
+                        .navigationTitle(eventTitle)
                         .toolbar(content: {
                             // 1
                             ToolbarItem(placement: .navigationBarTrailing) {
@@ -281,10 +368,12 @@ struct ContentView: View {
                             }
                         })
                 }
+                
                 CodeScannerView(codeTypes: [.qr], simulatedData: "PUCYMbQTTVlmTitXH8nO") { response in
                     switch response {
                     case .success(let result):
-                        print("Found event ID: \(result.string)")
+                        openEvent(eventId: result.string)
+                        attendEvent(eventId: result.string)
                     case .failure(let error):
                         print(error.localizedDescription)
                     }
