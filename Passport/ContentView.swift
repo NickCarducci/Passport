@@ -41,6 +41,7 @@ struct Event {
     var title: String
     var date: String
     var body: String
+    var attendees: Array<String>
 }
 extension Event: Decodable {
     enum CodingKeys: String, CodingKey {
@@ -48,6 +49,7 @@ extension Event: Decodable {
         case title = "title"
         case date = "date"
         case body = "body"
+        case attendees = "attendees"
     }
     init(from decoder: Decoder) throws {
         let podcastContainer = try decoder.container(keyedBy: CodingKeys.self)
@@ -55,6 +57,36 @@ extension Event: Decodable {
         self.title = try podcastContainer.decode(String.self, forKey: .title)
         self.date = try podcastContainer.decode(String.self, forKey: .date)
         self.body = try podcastContainer.decode(String.self, forKey: .body)
+        self.attendees = try podcastContainer.decode(Array.self, forKey: .attendees)
+    }
+}
+struct LeaderView: View {
+    @Binding public var username:String
+    @Binding public var eventsAttended:Int64
+    let defaults = UserDefaults.standard
+    var body: some View {
+        HStack{
+            Text("\(username): \(eventsAttended)")
+                .padding(10)
+        }
+    }
+}
+struct Leader {
+    var id: String
+    var username: String
+    var eventsAttended: Int64
+}
+extension Leader: Decodable {
+    enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case username = "username"
+        case eventsAttended = "eventsAttended"
+    }
+    init(from decoder: Decoder) throws {
+        let podcastContainer = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try podcastContainer.decode(String.self, forKey: .id)
+        self.username = try podcastContainer.decode(String.self, forKey: .username)
+        self.eventsAttended = try podcastContainer.decode(Int64.self, forKey: .eventsAttended)
     }
 }
 
@@ -81,6 +113,7 @@ struct ContentView: View {
     //@State var session: User = User(coder: NSCoder())!
     
     @State private var rocks = [Event]()
+    @State private var leaders = [Leader]()
     @State public var show: String = "home"
     @State public var openedEvent: String = ""
     @State public var eventTitle: String = "Scan a QR code"
@@ -155,7 +188,7 @@ struct ContentView: View {
                             
                                 for document in querySnapshot!.documents {
                                         //print("\(document.documentID): \(document.data())")
-                                    let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",body: document["body"] as? String ?? "")
+                                    let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",body: document["body"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [])
                                     //print(post)
                                     
                                     rocks.append(event)
@@ -167,7 +200,54 @@ struct ContentView: View {
                         }
                 }
     }
+    func getLeaders () {
+        
+        leaders = []
+        let db = Firestore.firestore()
+        db.collection("leaders")//.whereField("city", isEqualTo: placename)
+            .getDocuments() { (querySnapshot, error) in
+                        if let error = error {
+                                print("Error getting documents: \(error)")
+                        } else {
+                                if querySnapshot!.documents.isEmpty {
+                                    return print("is empty")
+                                }
+                            
+                                for document in querySnapshot!.documents {
+                                        //print("\(document.documentID): \(document.data())")
+                                    let leader = Leader(id: document.documentID,username: document["username"] as? String ?? "",eventsAttended: document["eventsAttended"] as? Int64 ?? 0)
+                                    //print(post)
+                                    
+                                    leaders.append(leader)
+                                    
+                                }
+                            leaders.sort {
+                                $0.eventsAttended > $1.eventsAttended
+                            }
+                        }
+                }
+    }
     func openEvent (eventId: String) {
+        
+        Task {
+            db.collection("events").document(eventId)
+              .addSnapshotListener { documentSnapshot, error in
+                guard let document = documentSnapshot else {
+                  print("Error fetching document: \(error!)")
+                  return
+                }
+                guard let data = document.data() else {
+                  print("Document data was empty.")
+                  return
+                }
+                print("Current data: \(data)")
+                  let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",body: document["body"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [])
+                  eventTitle = event.title
+                  eventBody = event.date + ": " + event.body
+              }
+        }
+    }
+    func attendEvent (eventId:String) {
         
         Task {
             let docRef = db.collection("events").document(eventId)
@@ -177,9 +257,34 @@ struct ContentView: View {
                 if document.exists {
                     let dataDescription = document.data().map(String.init(describing:)) ?? "nil"
                     print("Document data: \(dataDescription)")
-                    let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",body: document["body"] as? String ?? "")
-                    eventTitle = event.title
-                    eventBody = event.body
+                    let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",body: document["body"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [])
+                    if event.attendees.contains(Auth.auth().currentUser?.uid ?? "") {
+                        return
+                    }
+                    
+                    let eventRef = db.collection("events").document(eventId)
+                    
+                    // Set the "capital" field of the city 'DC'
+                    do {
+                        try await eventRef.updateData([
+                            "attendees": FieldValue.arrayUnion([Auth.auth().currentUser?.uid ?? ""])
+                        ])
+                        print("Document successfully updated")
+                    } catch {
+                        print("Error updating document: \(error)")
+                    }
+                    
+                    let leadersRef = db.collection("leaders").document("")
+                    
+                    // Set the "capital" field of the city 'DC'
+                    do {
+                        try await leadersRef.updateData([
+                            Auth.auth().currentUser?.uid ?? "": FieldValue.increment(Int64(1))
+                        ])
+                        print("Document successfully updated")
+                    } catch {
+                        print("Error updating document: \(error)")
+                    }
                     
                 } else {
                     print("Document does not exist")
@@ -187,21 +292,7 @@ struct ContentView: View {
             } catch {
                 print("Error getting document: \(error)")
             }
-        }
-    }
-    func attendEvent (eventId:String) {
-        Task {
-            let eventRef = db.collection("events").document(eventId)
             
-            // Set the "capital" field of the city 'DC'
-            do {
-                try await eventRef.updateData([
-                    "attendees": FieldValue.arrayUnion([Auth.auth().currentUser?.uid ?? ""])
-                ])
-                print("Document successfully updated")
-            } catch {
-                print("Error updating document: \(error)")
-            }
         }
     }
     var body: some View {
@@ -261,13 +352,6 @@ struct ContentView: View {
                             verifiable = true
                         }*/
                         verifiable = true
-                        /*firstly {
-                            signUp(phoneNumber: countryCodeNumber + phoneNumber)
-                        }.done(on: DispatchQueue.main) { id in
-                            verificationId = id
-                        }.catch { (error) in
-                            print(error.localizedDescription)
-                        }*/
                     } else {
                         /*let credential = PhoneAuthProvider.provider().credential(
                           withVerificationID: verificationId,
@@ -283,7 +367,29 @@ struct ContentView: View {
                                 return
                             }
                             _ = authResult
-                         loggedin = true
+                            
+                            Task {
+                                let docRef = db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "")
+                                
+                                do {
+                                    let document = try await docRef.getDocument()
+                                    if document.exists {
+                                        print("Document already exists")
+                                    } else {
+                                        do {
+                                            try await db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "").setData([
+                                                "eventsAttended": 0
+                                            ])
+                                            print("Document successfully written!")
+                                        } catch {
+                                            print("Error writing document: \(error)")
+                                        }
+                                    }
+                                    loggedin = true
+                                } catch {
+                                    print("Error getting document: \(error)")
+                                }
+                            }
                         }*/
                         loggedin = true
                     }
@@ -335,6 +441,23 @@ struct ContentView: View {
             if show == "leaderboard"{
                 VStack(alignment: .leading) {
                     Text("Leaderboard")
+                        .onTapGesture {
+                            getLeaders()
+                        }
+                    
+                    GeometryReader { geometry in
+                        ScrollView {
+                            List {
+                                ForEach ($leaders.indices, id: \.self){ index in
+                                    LeaderView(username:$leaders[index].username,eventsAttended:$leaders[index].eventsAttended
+                                    )
+                                }
+                            }
+                            .frame(width: geometry.size.width,
+                                   height: geometry.size.height)
+                        }
+                        .frame(height: .infinity)
+                    }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .offset(x: show == "leaderboard" ? 0 : UIScreen.screenWidth)
