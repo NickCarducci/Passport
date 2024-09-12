@@ -339,7 +339,7 @@ struct ContentView: View {
                         
                         //testing = true
                         //Auth.auth().settings?.isAppVerificationDisabledForTesting = true
-                        /*let _ = PhoneAuthProvider.provider(auth: Auth.auth())
+                        let _ = PhoneAuthProvider.provider(auth: Auth.auth())
                         PhoneAuthProvider.provider().verifyPhoneNumber(
                             countryCodeNumber + phoneNumber, uiDelegate: nil) { verificationID, error in
                             if error != nil {
@@ -352,10 +352,10 @@ struct ContentView: View {
                             }
                             verificationId = verificationID
                             verifiable = true
-                        }*/
-                        verifiable = true
+                        }
+                        //verifiable = true
                     } else {
-                        /*let credential = PhoneAuthProvider.provider().credential(
+                        let credential = PhoneAuthProvider.provider().credential(
                           withVerificationID: verificationId,
                           verificationCode: smsTextCode
                         )
@@ -392,8 +392,8 @@ struct ContentView: View {
                                     print("Error getting document: \(error)")
                                 }
                             }
-                        }*/
-                        loggedin = true
+                        }
+                        //loggedin = true
                     }
                     
                     
