@@ -96,21 +96,15 @@ enum FirebaseError: Error {
 }
 struct ContentView: View {
     
-    @State var verificationCode = ""
-    @State var verificationID = ""
     @State var newUsername = ""
     @State var phoneNumber = ""
     @State var countryCodeNumber = "+1"
     @State var country = ""
     @State var smsTextCode = ""
-    @State var timerExpired = false
-    @State var timeStr = ""
-    @State var timeRemaining = 60
     @State var loggedin = false
     @State var verificationId = ""
     @State var verifiable = false
     @State var testing = false
-    @GestureState private var isTapped = false
     //@State var session: User = User(coder: NSCoder())!
     
     @State private var rocks = [Event]()
@@ -122,20 +116,20 @@ struct ContentView: View {
 
     init() {
         // Use Firebase library to configure APIs
-        FirebaseApp.configure()
+        //FirebaseApp.configure()
         self.microsoftProvider = OAuthProvider(providerID: "microsoft.com")
         
     }
 
     func signOut(){
-        if Auth.auth().currentUser != nil {
+        //if Auth.auth().currentUser != nil {
             do {
                 try Auth.auth().signOut()
             }
             catch {
               print (error)
             }
-        }
+        //}
     
         loggedin = false
     }
@@ -276,12 +270,12 @@ struct ContentView: View {
                         print("Error updating document: \(error)")
                     }
                     
-                    let leadersRef = db.collection("leaders").document("")
+                    let leadersRef = db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "")
                     
                     // Set the "capital" field of the city 'DC'
                     do {
                         try await leadersRef.updateData([
-                            Auth.auth().currentUser?.uid ?? "": FieldValue.increment(Int64(1))
+                            "eventsAttended": FieldValue.increment(Int64(1))
                         ])
                         print("Document successfully updated")
                     } catch {
@@ -318,10 +312,13 @@ struct ContentView: View {
                 }
                 if verifiable {
                     Section{
-                        TextField("SMS code", text: $verificationCode)
+                        TextField("SMS code", text: $smsTextCode)
                             .font(Font.system(size: 15))
                             .fontWeight(.semibold)
                             .frame(width: nil, height: nil, alignment: .leading)
+                            .onChange(of: smsTextCode) {
+                                
+                            }
                     }
                 }
                 Button("Submit", action: {
@@ -339,9 +336,16 @@ struct ContentView: View {
                         
                         //testing = true
                         //Auth.auth().settings?.isAppVerificationDisabledForTesting = true
+                        if phoneNumber == "" {
+                            print("No phone number")
+                            return
+                        }
+                        if countryCodeNumber == "" {
+                            return
+                        }
                         let _ = PhoneAuthProvider.provider(auth: Auth.auth())
-                        PhoneAuthProvider.provider().verifyPhoneNumber(
-                            countryCodeNumber + phoneNumber, uiDelegate: nil) { verificationID, error in
+                        let phoneNumber = String(format: "+%@", countryCodeNumber + phoneNumber)
+                        PhoneAuthProvider.provider().verifyPhoneNumber( phoneNumber, uiDelegate: nil) { verificationID, error in
                             if error != nil {
                                 print(error!.localizedDescription)
                                 return
@@ -361,7 +365,7 @@ struct ContentView: View {
                         )
                         Auth.auth().signIn(with: credential) { authResult, error in
                             if error != nil {
-                                print(FirebaseError.Error)
+                                print(error?.localizedDescription ?? "")
                                 return
                             }
                             guard let authResult = authResult else {
@@ -387,10 +391,10 @@ struct ContentView: View {
                                             print("Error writing document: \(error)")
                                         }
                                     }
-                                    loggedin = true
                                 } catch {
                                     print("Error getting document: \(error)")
                                 }
+                                loggedin = true
                             }
                         }
                         //loggedin = true
@@ -431,13 +435,14 @@ struct ContentView: View {
                                     }
                                 }
                             }
-                            .frame(width: geometry.size.width,
-                                   height: geometry.size.height)
+                            //.scrollDisabled(true)
+                            //.scaledToFit()
+                            .frame(width: geometry.size.width,height: geometry.size.height)
                         }
-                        .frame(height: .infinity)
+                        //.frame(height: .infinity)
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                //.frame(maxWidth: .infinity, maxHeight: .infinity)
                 .offset(x: show == "list" ? 0 : -UIScreen.screenWidth)
             }
             if show == "leaderboard"{
@@ -498,10 +503,10 @@ struct ContentView: View {
                             .frame(width: geometry.size.width,
                                    height: geometry.size.height)
                         }
-                        .frame(height: .infinity)
+                        //.frame(height: .infinity)
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                //.frame(maxWidth: .infinity, maxHeight: .infinity)
                 .offset(x: show == "leaderboard" ? 0 : UIScreen.screenWidth)
             }
             if show == "home" {
@@ -551,7 +556,7 @@ struct ContentView: View {
                 .onTapGesture {
                     
                     if show == "home"{
-                        //signOut()
+                        signOut()
                         loggedin = false
                         verifiable = false
                     } else {
