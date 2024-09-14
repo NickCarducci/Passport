@@ -96,6 +96,7 @@ enum FirebaseError: Error {
     case VerificatrionEmpty
 }
 struct ContentView: View {
+    @Environment(\.scenePhase) var scenePhase
     
     @State var newUsername = ""
     @State var phoneNumber = ""
@@ -398,17 +399,6 @@ struct ContentView: View {
                                     print("Error getting document: \(error)")
                                 }
                                 loggedin = true
-                                let status = AVCaptureDevice.authorizationStatus(for: .video)
-                                
-                                // Determine if the user previously authorized camera access.
-                                var isAuthorized = status == .authorized
-                                
-                                // If the system hasn't determined the user's authorization status,
-                                // explicitly prompt them for approval.
-                                if status == .notDetermined {
-                                    isAuthorized = await AVCaptureDevice.requestAccess(for: .video)
-                                }
-                                deniedCamera = isAuthorized
                             }
                         }
                         //loggedin = true
@@ -584,6 +574,28 @@ struct ContentView: View {
                         verifiable = false
                     } else {
                         show = "home"
+                    }
+                }
+                .onChange(of: scenePhase) { oldPhase, newPhase in
+                    if newPhase == .active {
+                        print("Active")
+                        Task {
+                            let status = AVCaptureDevice.authorizationStatus(for: .video)
+                            
+                            // Determine if the user previously authorized camera access.
+                            var isAuthorized = status == .authorized
+                            
+                            // If the system hasn't determined the user's authorization status,
+                            // explicitly prompt them for approval.
+                            if status == .notDetermined {
+                                isAuthorized = await AVCaptureDevice.requestAccess(for: .video)
+                            }
+                            deniedCamera = isAuthorized
+                        }
+                    } else if newPhase == .inactive {
+                        print("Inactive")
+                    } else if newPhase == .background {
+                        print("Background")
                     }
                 }
         }
