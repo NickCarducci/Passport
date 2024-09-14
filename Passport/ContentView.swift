@@ -5,6 +5,7 @@
 //  Created by Nicholas Carducci on 9/7/24.
 //
 import Foundation
+import AVFoundation
 import PromiseKit
 import SwiftUI
 import Firebase
@@ -101,6 +102,7 @@ struct ContentView: View {
     @State var countryCodeNumber = "+1"
     @State var country = ""
     @State var smsTextCode = ""
+    @State var deniedCamera = false
     @State var loggedin = false
     @State var verificationId = ""
     @State var verifiable = false
@@ -396,6 +398,17 @@ struct ContentView: View {
                                     print("Error getting document: \(error)")
                                 }
                                 loggedin = true
+                                let status = AVCaptureDevice.authorizationStatus(for: .video)
+                                
+                                // Determine if the user previously authorized camera access.
+                                var isAuthorized = status == .authorized
+                                
+                                // If the system hasn't determined the user's authorization status,
+                                // explicitly prompt them for approval.
+                                if status == .notDetermined {
+                                    isAuthorized = await AVCaptureDevice.requestAccess(for: .video)
+                                }
+                                deniedCamera = isAuthorized
                             }
                         }
                         //loggedin = true
@@ -545,14 +558,17 @@ struct ContentView: View {
                             }
                         })
                 }
-                
-                CodeScannerView(codeTypes: [.qr], simulatedData: "PUCYMbQTTVlmTitXH8nO") { response in
-                    switch response {
-                    case .success(let result):
-                        openEvent(eventId: result.string)
-                        attendEvent(eventId: result.string)
-                    case .failure(let error):
-                        print(error.localizedDescription)
+                if deniedCamera {
+                    Text("Go to Settings>Passport>Allow Passport to Access:Camera")
+                } else {
+                    CodeScannerView(codeTypes: [.qr], simulatedData: "PUCYMbQTTVlmTitXH8nO") { response in
+                        switch response {
+                        case .success(let result):
+                            openEvent(eventId: result.string)
+                            attendEvent(eventId: result.string)
+                        case .failure(let error):
+                            print(error.localizedDescription)
+                        }
                     }
                 }
             }
