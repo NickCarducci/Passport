@@ -384,9 +384,10 @@ struct ContentView: View {
                                     } else {
                                         do {
                                             try await db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "").setData([
-                                                "eventsAttended": 0
+                                                "eventsAttended": 0,
+                                                "phone": phoneNumber
                                             ])
-                                            print("Document successfully written!")
+                                            print("Welcome to Passport!")
                                         } catch {
                                             print("Error writing document: \(error)")
                                         }
@@ -416,7 +417,10 @@ struct ContentView: View {
         if Auth.auth().currentUser != nil || loggedin {
             if show == "list"{
                 VStack(alignment: .leading) {
-                    Text("Events")
+                    Text("Load Events")
+                        .font(Font.system(size: 15))
+                        .fontWeight(.semibold)
+                        .frame(width: nil, height: nil, alignment: .leading)
                         .onTapGesture {
                             getEvents()
                         }
@@ -487,7 +491,10 @@ struct ContentView: View {
                             })
                         }
                     }
-                    Text("Leaderboard")
+                    Text("Update Leaderboard")
+                        .font(Font.system(size: 15))
+                        .fontWeight(.semibold)
+                        .frame(width: nil, height: nil, alignment: .leading)
                         .onTapGesture {
                             getLeaders()
                         }
