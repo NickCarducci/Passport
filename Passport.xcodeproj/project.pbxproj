@@ -15,7 +15,6 @@
 		A33258922C9127860061371F /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A33258912C9127860061371F /* FirebaseAuth */; };
 		A33258942C9127860061371F /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A33258932C9127860061371F /* FirebaseFirestore */; };
 		A3C0DDC12C948E9A0092DC82 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = A3C0DDC02C948E9A0092DC82 /* FirebaseMessaging */; };
-		A3C0DDCA2C9603B10092DC82 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A3C0DDC82C9600EB0092DC82 /* GoogleService-Info.plist */; };
 		A3D8370A2C8CAD28004AD303 /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = A3D837092C8CAD28004AD303 /* PromiseKit */; };
 /* End PBXBuildFile section */
 
@@ -162,7 +161,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A3C0DDCA2C9603B10092DC82 /* GoogleService-Info.plist in Resources */,
 				A32A202B2C8C8D3B0059417C /* Preview Assets.xcassets in Resources */,
 				A32A20272C8C8D3B0059417C /* Assets.xcassets in Resources */,
 			);
