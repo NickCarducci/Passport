@@ -15,7 +15,7 @@
 		A33258922C9127860061371F /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A33258912C9127860061371F /* FirebaseAuth */; };
 		A33258942C9127860061371F /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A33258932C9127860061371F /* FirebaseFirestore */; };
 		A3C0DDC12C948E9A0092DC82 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = A3C0DDC02C948E9A0092DC82 /* FirebaseMessaging */; };
-		A3C0DDCF2C9610C70092DC82 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A3C0DDCE2C9610C70092DC82 /* GoogleService-Info.plist */; };
+		A3C0DDD12C96147C0092DC82 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A3C0DDD02C96147C0092DC82 /* GoogleService-Info.plist */; };
 		A3D8370A2C8CAD28004AD303 /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = A3D837092C8CAD28004AD303 /* PromiseKit */; };
 /* End PBXBuildFile section */
 
@@ -27,7 +27,7 @@
 		A32A20282C8C8D3B0059417C /* Passport.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Passport.entitlements; sourceTree = "<group>"; };
 		A32A202A2C8C8D3B0059417C /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		A38850E42C8D00F300CCBF22 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		A3C0DDCE2C9610C70092DC82 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		A3C0DDD02C96147C0092DC82 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,7 +66,7 @@
 		A32A20212C8C8D390059417C /* Passport */ = {
 			isa = PBXGroup;
 			children = (
-				A3C0DDCE2C9610C70092DC82 /* GoogleService-Info.plist */,
+				A3C0DDD02C96147C0092DC82 /* GoogleService-Info.plist */,
 				A38850E42C8D00F300CCBF22 /* Info.plist */,
 				A32A20222C8C8D390059417C /* PassportApp.swift */,
 				A32A20242C8C8D390059417C /* ContentView.swift */,
@@ -164,7 +164,7 @@
 			files = (
 				A32A202B2C8C8D3B0059417C /* Preview Assets.xcassets in Resources */,
 				A32A20272C8C8D3B0059417C /* Assets.xcassets in Resources */,
-				A3C0DDCF2C9610C70092DC82 /* GoogleService-Info.plist in Resources */,
+				A3C0DDD12C96147C0092DC82 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
