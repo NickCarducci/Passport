@@ -103,7 +103,7 @@ struct ContentView: View {
     @State var countryCodeNumber = "+1"
     @State var country = ""
     @State var smsTextCode = ""
-    @State var deniedCamera = false
+    @State var allowedCamera = false
     @State var loggedin = false
     @State var verificationId = ""
     @State var verifiable = false
@@ -548,7 +548,8 @@ struct ContentView: View {
                             }
                         })
                 }
-                if deniedCamera {
+                Toggle("Allow camera", isOn: $allowedCamera)
+                if allowedCamera {
                     Text("Go to Settings>Passport>Allow Passport to Access:Camera")
                 } else {
                     CodeScannerView(codeTypes: [.qr], simulatedData: "PUCYMbQTTVlmTitXH8nO") { response in
@@ -590,7 +591,7 @@ struct ContentView: View {
                             if status == .notDetermined {
                                 isAuthorized = await AVCaptureDevice.requestAccess(for: .video)
                             }
-                            deniedCamera = isAuthorized
+                            allowedCamera = isAuthorized
                         }
                     } else if newPhase == .inactive {
                         print("Inactive")
