@@ -27,12 +27,14 @@ func dateFromString (date: String) -> Date {
 }
 struct EventView: View {
     @Binding public var title:String
-    @Binding public var bodyy:String
+    @Binding public var location:String
     @Binding public var date:String
+    @Binding public var descriptionLink:String
     let defaults = UserDefaults.standard
     var body: some View {
         HStack{
-            Text("\(dateFromString(date:date)) \(title):\(bodyy)")
+            Link("\(dateFromString(date:date)) \(title): \(location)",
+                 destination: URL(string: descriptionLink)!)
                 .padding(10)
         }
     }
@@ -41,24 +43,27 @@ struct Event {
     var id: String
     var title: String
     var date: String
-    var body: String
+    var location: String
     var attendees: Array<String>
+    var descriptionLink: String
 }
 extension Event: Decodable {
     enum CodingKeys: String, CodingKey {
         case id = "id"
         case title = "title"
         case date = "date"
-        case body = "body"
+        case location = "location"
         case attendees = "attendees"
+        case descriptionLink = "descriptionLink"
     }
     init(from decoder: Decoder) throws {
         let podcastContainer = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try podcastContainer.decode(String.self, forKey: .id)
         self.title = try podcastContainer.decode(String.self, forKey: .title)
         self.date = try podcastContainer.decode(String.self, forKey: .date)
-        self.body = try podcastContainer.decode(String.self, forKey: .body)
+        self.location = try podcastContainer.decode(String.self, forKey: .location)
         self.attendees = try podcastContainer.decode(Array.self, forKey: .attendees)
+        self.descriptionLink = try podcastContainer.decode(String.self, forKey: .descriptionLink)
     }
 }
 struct LeaderView: View {
@@ -98,18 +103,25 @@ enum FirebaseError: Error {
 struct ContentView: View {
     @Environment(\.scenePhase) var scenePhase
     
-    @State var newUsername = ""
+    @State var address = ""
+    @State var promptAddress = false
+    @State var addressLine1 = ""
+    @State var addressLine2 = ""
+    @State var city = ""
+    @State var state = ""
+    @State var zipCode = ""
     @State var phoneNumber = ""
     @State var countryCodeNumber = "+1"
     @State var country = ""
     @State var smsTextCode = ""
-    @State var deniedCamera = false
+    @State var deniedCamera = true
     @State var loggedin = false
     @State var verificationId = ""
     @State var verifiable = false
     @State var testing = false
     //@State var session: User = User(coder: NSCoder())!
     
+    @State var newUsername = ""
     @State private var rocks = [Event]()
     @State private var leaders = [Leader]()
     @State public var show: String = "home"
@@ -120,7 +132,7 @@ struct ContentView: View {
     init() {
         // Use Firebase library to configure APIs
         //FirebaseApp.configure()
-        self.microsoftProvider = OAuthProvider(providerID: "microsoft.com")
+        //self.microsoftProvider = OAuthProvider(providerID: "microsoft.com")
         
     }
 
@@ -187,7 +199,7 @@ struct ContentView: View {
                             
                                 for document in querySnapshot!.documents {
                                         //print("\(document.documentID): \(document.data())")
-                                    let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",body: document["body"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [])
+                                    let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",location: document["location"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [],descriptionLink: document["descriptionLink"] as? String ?? "")
                                     //print(post)
                                     
                                     rocks.append(event)
@@ -204,6 +216,7 @@ struct ContentView: View {
         leaders = []
         let db = Firestore.firestore()
         db.collection("leaders")//.whereField("city", isEqualTo: placename)
+            .order(by: "eventsAttended", descending: false)
             .getDocuments() { (querySnapshot, error) in
                         if let error = error {
                                 print("Error getting documents: \(error)")
@@ -240,9 +253,9 @@ struct ContentView: View {
                   return
                 }
                 print("Current data: \(data)")
-                  let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",body: document["body"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [])
+                  let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",location: document["location"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [],descriptionLink: document["descriptionLink"] as? String ?? "")
                   eventTitle = event.title
-                  eventBody = event.date + ": " + event.body
+                  eventBody = event.date + ": " + event.location
               }
         }
     }
@@ -256,7 +269,7 @@ struct ContentView: View {
                 if document.exists {
                     let dataDescription = document.data().map(String.init(describing:)) ?? "nil"
                     print("Document data: \(dataDescription)")
-                    let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",body: document["body"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [])
+                    let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",location: document["location"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [],descriptionLink: document["descriptionLink"] as? String ?? "")
                     if event.attendees.contains(Auth.auth().currentUser?.uid ?? "") {
                         return
                     }
@@ -297,6 +310,45 @@ struct ContentView: View {
     var body: some View {
         if Auth.auth().currentUser == nil && !loggedin {
             Form{
+                if promptAddress {
+                    Section(footer: Text("Enter your mailing address in case you win a gift card.")) {
+                        TextField("Line 1", text: $addressLine1)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .frame(width: nil, height: nil, alignment: .leading)
+                            .onChange(of: addressLine1) {
+                                verifiable = false
+                            }
+                        TextField("Line 2", text: $addressLine1)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .frame(width: nil, height: nil, alignment: .leading)
+                            .onChange(of: addressLine1) {
+                                verifiable = false
+                            }
+                        TextField("City", text: $city)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .frame(width: nil, height: nil, alignment: .leading)
+                            .onChange(of: city) {
+                                verifiable = false
+                            }
+                        TextField("State", text: $state)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .frame(width: nil, height: nil, alignment: .leading)
+                            .onChange(of: state) {
+                                verifiable = false
+                            }
+                        TextField("Zip Code", text: $zipCode)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .frame(width: nil, height: nil, alignment: .leading)
+                            .onChange(of: zipCode) {
+                                verifiable = false
+                            }
+                    }
+                }
                 Section(footer: Text("Get an SMS code. Standard messaging rates apply.")) {
                     TextField("Country code", text: $countryCodeNumber)
                         .font(Font.system(size: 15))
@@ -325,6 +377,43 @@ struct ContentView: View {
                     }
                 }
                 Button("Submit", action: {
+                    
+                    if promptAddress {
+                        if addressLine1 == "" {
+                            return print("No address line 1")
+                        }
+                        if city == "" {
+                            return print("No city")
+                        }
+                        if state == "" {
+                            return print("No state")
+                        }
+                        if zipCode == "" {
+                            return print("No zip code")
+                        }
+                        if addressLine2 == "" {
+                            address = addressLine1 + ", "
+                            + city + ", "
+                            + state
+                        }else {
+                            address = addressLine1 + ", "
+                            + addressLine2 + ", "
+                            + city + ", "
+                            + state
+                        }
+                        Task {
+                            do {
+                                try await db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "").setData([
+                                    "eventsAttended": 0,
+                                    "phone": phoneNumber,
+                                    "address": address
+                                ])
+                                print("Welcome to Passport!")
+                            } catch {
+                                print("Error writing document: \(error)")
+                            }
+                        }
+                    }
                     
                     if !verifiable {
                         /*let _ = Auth.auth().addStateDidChangeListener({ (auth, user) in
@@ -384,16 +473,9 @@ struct ContentView: View {
                                     let document = try await docRef.getDocument()
                                     if document.exists {
                                         print("Document already exists")
+                                        loggedin = true
                                     } else {
-                                        do {
-                                            try await db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "").setData([
-                                                "eventsAttended": 0,
-                                                "phone": phoneNumber
-                                            ])
-                                            print("Welcome to Passport!")
-                                        } catch {
-                                            print("Error writing document: \(error)")
-                                        }
+                                        promptAddress = true
                                     }
                                 } catch {
                                     print("Error getting document: \(error)")
@@ -406,11 +488,11 @@ struct ContentView: View {
                     
                     
                 })
-                Section(footer: Text("Sign in with Microsoft.")) {
+                /*Section(footer: Text("Sign in with Microsoft.")) {
                     Button(action: signIn) {
                         Text("Sign in with Microsoft")
                     }
-                }
+                }*/
             }
         }
         if(testing){
@@ -432,14 +514,15 @@ struct ContentView: View {
                         ScrollView {
                             List {
                                 ForEach ($rocks.indices, id: \.self){ index in
-                                    EventView(title:$rocks[index].title,bodyy:$rocks[index].body,
-                                              date:$rocks[index].date
+                                    EventView(title:$rocks[index].title,location:$rocks[index].location,
+                                              date:$rocks[index].date,
+                                              descriptionLink:$rocks[index].descriptionLink
                                     )
-                                    .onTapGesture {
+                                    /*.onTapGesture {
                                         openedEvent = rocks[index].id
                                         openEvent(eventId:openedEvent)
                                         show = "home"
-                                    }
+                                    }*/
                                 }
                             }
                             //.scrollDisabled(true)
@@ -464,32 +547,32 @@ struct ContentView: View {
                                     //verifiable = false
                                 }
                             Button("Save", action: {
-                                Task {do {
-                                    let querySnapshot = try await db.collection("leaders").whereField("username", isEqualTo: newUsername)
-                                      .getDocuments()
-                                    for document in querySnapshot.documents {
-                                      print("\(document.documentID) => \(document.data())")
-                                    }
-                                    if querySnapshot.documents.isEmpty {
-                                        print("saving username")
-                                        let leaderRef = db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "")
-                                        
-                                        // Set the "username" field of the leader 'newUsername'
-                                        do {
-                                            try await leaderRef.updateData([
-                                                "username": newUsername
-                                            ])
-                                            print("Document successfully updated")
-                                        } catch {
-                                            print("Error updating document: \(error)")
+                                Task {
+                                    do {
+                                        let querySnapshot = try await db.collection("leaders").whereField("username", isEqualTo: newUsername)
+                                          .getDocuments()
+                                        for document in querySnapshot.documents {
+                                          print("\(document.documentID) => \(document.data())")
                                         }
-                                    } else {
-                                        print("username already exists")
-                                    }
-                                  } catch {
-                                    print("Error getting documents: \(error)")
-                                  }
+                                        if querySnapshot.documents.isEmpty {
+                                            print("saving username")
+                                            let leaderRef = db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "")
                                             
+                                            // Set the "username" field of the leader 'newUsername'
+                                            do {
+                                                try await leaderRef.updateData([
+                                                    "username": newUsername
+                                                ])
+                                                print("Document successfully updated")
+                                            } catch {
+                                                print("Error updating document: \(error)")
+                                            }
+                                        } else {
+                                            print("username already exists")
+                                        }
+                                    } catch {
+                                    print("Error getting documents: \(error)")
+                                    }
                                 }
                             })
                         }
@@ -593,6 +676,7 @@ struct ContentView: View {
                             }
                             deniedCamera = !isAuthorized
                         }
+                        deniedCamera = true
                     } else if newPhase == .inactive {
                         print("Inactive")
                     } else if newPhase == .background {
