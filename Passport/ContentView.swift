@@ -103,6 +103,7 @@ enum FirebaseError: Error {
 struct ContentView: View {
     @Environment(\.scenePhase) var scenePhase
     
+    @State var alertCamera = "Go to Settings>Passport>Allow Passport to Access:Camera"
     @State var address = ""
     @State var promptAddress = false
     @State var addressLine1 = ""
@@ -146,7 +147,6 @@ struct ContentView: View {
             }
         //}
     
-        loggedin = false
     }
     var microsoftProvider : OAuthProvider?
     func signIn () {
@@ -267,6 +267,8 @@ struct ContentView: View {
             do {
                 let document = try await docRef.getDocument()
                 if document.exists {
+                    alertCamera = "Thank you"
+                    deniedCamera = true
                     let dataDescription = document.data().map(String.init(describing:)) ?? "nil"
                     print("Document data: \(dataDescription)")
                     let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",location: document["location"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [],descriptionLink: document["descriptionLink"] as? String ?? "")
@@ -633,7 +635,8 @@ struct ContentView: View {
                 }
                 Toggle("Hide camera", isOn: $deniedCamera)
                 if deniedCamera {
-                    Text("Go to Settings>Passport>Allow Passport to Access:Camera")
+                    Text(alertCamera)
+                        .font(.system(size: 36))
                 } else {
                     CodeScannerView(codeTypes: [.qr], simulatedData: "PUCYMbQTTVlmTitXH8nO") { response in
                         switch response {
@@ -653,9 +656,9 @@ struct ContentView: View {
                 .onTapGesture {
                     
                     if show == "home"{
-                        signOut()
                         loggedin = false
                         verifiable = false
+                        signOut()
                     } else {
                         show = "home"
                     }
@@ -667,20 +670,21 @@ struct ContentView: View {
                             let status = AVCaptureDevice.authorizationStatus(for: .video)
                             
                             // Determine if the user previously authorized camera access.
-                            var isAuthorized = status == .authorized
+                            var isAuthorized = status == .denied
                             
                             // If the system hasn't determined the user's authorization status,
                             // explicitly prompt them for approval.
                             if status == .notDetermined {
                                 isAuthorized = await AVCaptureDevice.requestAccess(for: .video)
                             }
-                            deniedCamera = !isAuthorized
+                            //deniedCamera = !isAuthorized
                         }
-                        deniedCamera = true
                     } else if newPhase == .inactive {
                         print("Inactive")
                     } else if newPhase == .background {
                         print("Background")
+                        deniedCamera = true
+                        alertCamera = "Go to Settings>Passport>Allow Passport to Access:Camera"
                     }
                 }
         }
