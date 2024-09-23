@@ -260,6 +260,7 @@ struct ContentView: View {
         }
     }
     func attendEvent (eventId:String) {
+        deniedCamera = true
         
         Task {
             let docRef = db.collection("events").document(eventId)
@@ -268,7 +269,6 @@ struct ContentView: View {
                 let document = try await docRef.getDocument()
                 if document.exists {
                     alertCamera = "Thank you"
-                    deniedCamera = true
                     let dataDescription = document.data().map(String.init(describing:)) ?? "nil"
                     print("Document data: \(dataDescription)")
                     let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",location: document["location"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [],descriptionLink: document["descriptionLink"] as? String ?? "")
@@ -301,9 +301,11 @@ struct ContentView: View {
                     }
                     
                 } else {
+                    alertCamera = "Event doesn't exist"
                     print("Document does not exist")
                 }
             } catch {
+                alertCamera = "Event doesn't exist"
                 print("Error getting document: \(error)")
             }
             
@@ -644,6 +646,8 @@ struct ContentView: View {
                             openEvent(eventId: result.string)
                             attendEvent(eventId: result.string)
                         case .failure(let error):
+                            deniedCamera = true
+                            alertCamera = error.localizedDescription + ". Try again."
                             print(error.localizedDescription)
                         }
                     }
