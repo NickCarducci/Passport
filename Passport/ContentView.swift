@@ -6,7 +6,7 @@
 //
 import Foundation
 import AVFoundation
-import PromiseKit
+//import PromiseKit
 import SwiftUI
 import Firebase
 import FirebaseAuth
@@ -35,6 +35,7 @@ struct EventView: View {
         HStack{
             Link("\(dateFromString(date:date)) \(title): \(location)",
                  destination: URL(string: descriptionLink)!)
+                .foregroundColor(.black)
                 .padding(10)
         }
     }
@@ -103,7 +104,7 @@ enum FirebaseError: Error {
 struct ContentView: View {
     @Environment(\.scenePhase) var scenePhase
     
-    @State var alertCamera = "Go to Settings>Passport>Allow Passport to Access:Camera"
+    @State var alertCamera = "Go to Settings, Passport, and then Allow Passport to Access: Camera"
     @State var address = ""
     @State var promptAddress = false
     @State var addressLine1 = ""
@@ -398,16 +399,17 @@ struct ContentView: View {
                         if addressLine2 == "" {
                             address = addressLine1 + ", "
                             + city + ", "
-                            + state
+                            + state + " " + zipCode
                         }else {
                             address = addressLine1 + ", "
                             + addressLine2 + ", "
                             + city + ", "
-                            + state
+                            + state + " " + zipCode
                         }
                         Task {
                             do {
                                 try await db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "").setData([
+                                    "username": "Student",
                                     "eventsAttended": 0,
                                     "phone": phoneNumber,
                                     "address": address
@@ -513,6 +515,7 @@ struct ContentView: View {
                         .onTapGesture {
                             getEvents()
                         }
+                        .padding(10)
                     
                     GeometryReader { geometry in
                         ScrollView {
@@ -588,6 +591,7 @@ struct ContentView: View {
                         .onTapGesture {
                             getLeaders()
                         }
+                        .padding(10)
                     
                     GeometryReader { geometry in
                         ScrollView {
@@ -636,6 +640,7 @@ struct ContentView: View {
                         })
                 }
                 Toggle("Hide camera", isOn: $deniedCamera)
+                    .padding(10)
                 if deniedCamera {
                     Text(alertCamera)
                         .font(.system(size: 36))
@@ -688,7 +693,7 @@ struct ContentView: View {
                     } else if newPhase == .background {
                         print("Background")
                         deniedCamera = true
-                        alertCamera = "Go to Settings>Passport>Allow Passport to Access:Camera"
+                        alertCamera = "Go to Settings, Passport, and then Allow Passport to Access: Camera"
                     }
                 }
         }

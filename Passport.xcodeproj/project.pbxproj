@@ -16,7 +16,6 @@
 		A33258942C9127860061371F /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A33258932C9127860061371F /* FirebaseFirestore */; };
 		A3C0DDC12C948E9A0092DC82 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = A3C0DDC02C948E9A0092DC82 /* FirebaseMessaging */; };
 		A3C0DDD12C96147C0092DC82 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A3C0DDD02C96147C0092DC82 /* GoogleService-Info.plist */; };
-		A3D8370A2C8CAD28004AD303 /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = A3D837092C8CAD28004AD303 /* PromiseKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,7 +38,6 @@
 				A30C6EE72C8F9BE900937254 /* CodeScanner in Frameworks */,
 				A33258942C9127860061371F /* FirebaseFirestore in Frameworks */,
 				A33258922C9127860061371F /* FirebaseAuth in Frameworks */,
-				A3D8370A2C8CAD28004AD303 /* PromiseKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -109,7 +107,6 @@
 			);
 			name = Passport;
 			packageProductDependencies = (
-				A3D837092C8CAD28004AD303 /* PromiseKit */,
 				A30C6EE62C8F9BE900937254 /* CodeScanner */,
 				A33258912C9127860061371F /* FirebaseAuth */,
 				A33258932C9127860061371F /* FirebaseFirestore */,
@@ -144,7 +141,6 @@
 			);
 			mainGroup = A32A20162C8C8D380059417C;
 			packageReferences = (
-				A3D837082C8CAD28004AD303 /* XCRemoteSwiftPackageReference "PromiseKit" */,
 				A30C6EE52C8F9BE800937254 /* XCRemoteSwiftPackageReference "CodeScanner" */,
 				A33258902C9127860061371F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
@@ -429,14 +425,6 @@
 				minimumVersion = 11.2.0;
 			};
 		};
-		A3D837082C8CAD28004AD303 /* XCRemoteSwiftPackageReference "PromiseKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/mxcl/PromiseKit";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 8.1.2;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -459,11 +447,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A33258902C9127860061371F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseMessaging;
-		};
-		A3D837092C8CAD28004AD303 /* PromiseKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A3D837082C8CAD28004AD303 /* XCRemoteSwiftPackageReference "PromiseKit" */;
-			productName = PromiseKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

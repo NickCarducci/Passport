@@ -1,5 +1,5 @@
 {
-  "originHash" : "db48899705a5ecca9e9c7975890472931a8f67805c5ed17a37acc9702b851f30",
+  "originHash" : "ace6d0177f9faae3bf92a607e4c29b7a678d49e487b58a058ba9b9f3fb887791",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -107,15 +107,6 @@
       "state" : {
         "revision" : "b7e1104502eca3a213b46303391ca4d3bc8ddec1",
         "version" : "2.30910.0"
-      }
-    },
-    {
-      "identity" : "promisekit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mxcl/PromiseKit",
-      "state" : {
-        "revision" : "6fcc08077124e9747f1ec7bd8bb78f5caffe5a79",
-        "version" : "8.1.2"
       }
     },
     {
