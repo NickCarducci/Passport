@@ -107,6 +107,8 @@ struct ContentView: View {
     @State var alertCamera = "Go to Settings, Passport, and then Allow Passport to Access: Camera"
     @State var address = ""
     @State var promptAddress = false
+    @State var fullName = ""
+    @State var studentId = ""
     @State var addressLine1 = ""
     @State var addressLine2 = ""
     @State var city = ""
@@ -314,13 +316,28 @@ struct ContentView: View {
     }
     let logo = Image("PassportWeek_Logo")
     var body: some View {
-        if Auth.auth().currentUser == nil && !loggedin {
+        //Auth.auth().currentUser == nil &&
+        if !loggedin {
             Form{
                 logo
                     .resizable()
                     .scaledToFit()
                 if promptAddress {
                     Section(footer: Text("Enter your mailing address in case you win a gift card.")) {
+                        TextField("Full Name", text: $fullName)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .frame(width: nil, height: nil, alignment: .leading)
+                            .onChange(of: fullName) {
+                                verifiable = false
+                            }
+                        TextField("Student ID (s0989374)", text: $studentId)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .frame(width: nil, height: nil, alignment: .leading)
+                            .onChange(of: studentId) {
+                                verifiable = false
+                            }
                         TextField("Line 1", text: $addressLine1)
                             .font(Font.system(size: 15))
                             .fontWeight(.semibold)
@@ -328,11 +345,11 @@ struct ContentView: View {
                             .onChange(of: addressLine1) {
                                 verifiable = false
                             }
-                        TextField("Line 2", text: $addressLine1)
+                        TextField("Line 2", text: $addressLine2)
                             .font(Font.system(size: 15))
                             .fontWeight(.semibold)
                             .frame(width: nil, height: nil, alignment: .leading)
-                            .onChange(of: addressLine1) {
+                            .onChange(of: addressLine2) {
                                 verifiable = false
                             }
                         TextField("City", text: $city)
@@ -358,36 +375,44 @@ struct ContentView: View {
                             }
                     }
                 }
-                Section(footer: Text("Get an SMS code. Standard messaging rates apply.")) {
-                    TextField("Country code", text: $countryCodeNumber)
-                        .font(Font.system(size: 15))
-                        .fontWeight(.semibold)
-                        .frame(width: nil, height: nil, alignment: .leading)
-                        .onChange(of: countryCodeNumber) {
-                          verifiable = false
-                        }
-                    TextField("Enter your phone number", text: $phoneNumber)
-                        .font(Font.system(size: 15))
-                        .fontWeight(.semibold)
-                        .frame(width: nil, height: nil, alignment: .leading)
-                        .onChange(of: phoneNumber) {
-                          verifiable = false
-                        }
-                }
-                if verifiable {
-                    Section{
-                        TextField("SMS code", text: $smsTextCode)
+                if !promptAddress {
+                    Section(footer: Text("Get an SMS code. Standard messaging rates apply.")) {
+                        TextField("Country code", text: $countryCodeNumber)
                             .font(Font.system(size: 15))
                             .fontWeight(.semibold)
                             .frame(width: nil, height: nil, alignment: .leading)
-                            .onChange(of: smsTextCode) {
-                                
+                            .onChange(of: countryCodeNumber) {
+                                verifiable = false
                             }
+                        TextField("Enter your phone number", text: $phoneNumber)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .frame(width: nil, height: nil, alignment: .leading)
+                            .onChange(of: phoneNumber) {
+                                verifiable = false
+                            }
+                    }
+                    if verifiable {
+                        Section{
+                            TextField("SMS code", text: $smsTextCode)
+                                .font(Font.system(size: 15))
+                                .fontWeight(.semibold)
+                                .frame(width: nil, height: nil, alignment: .leading)
+                                .onChange(of: smsTextCode) {
+                                    
+                                }
+                        }
                     }
                 }
                 Button("Submit", action: {
                     
                     if promptAddress {
+                        if fullName == "" {
+                            return print("No full name")
+                        }
+                        if studentId == "" {
+                            return print("No student id")
+                        }
                         if addressLine1 == "" {
                             return print("No address line 1")
                         }
@@ -413,12 +438,15 @@ struct ContentView: View {
                         Task {
                             do {
                                 try await db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "").setData([
+                                    "fullName": fullName,
+                                    "studentId": studentId,
                                     "username": "Student",
                                     "eventsAttended": 0,
                                     "phone": phoneNumber,
                                     "address": address
                                 ])
                                 print("Welcome to Passport!")
+                                loggedin = true
                             } catch {
                                 print("Error writing document: \(error)")
                             }
@@ -490,7 +518,7 @@ struct ContentView: View {
                                 } catch {
                                     print("Error getting document: \(error)")
                                 }
-                                loggedin = true
+                                //loggedin = true
                             }
                         }
                         //loggedin = true
@@ -508,8 +536,8 @@ struct ContentView: View {
         if(testing){
             Text(countryCodeNumber + phoneNumber)
         }
-        
-        if Auth.auth().currentUser != nil || loggedin {
+        //Auth.auth().currentUser != nil ||
+        if loggedin {
             if show == "list"{
                 VStack(alignment: .leading) {
                     Text("Load Events")
