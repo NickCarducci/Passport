@@ -312,9 +312,13 @@ struct ContentView: View {
             
         }
     }
+    let logo = Image("PassportWeek_Logo")
     var body: some View {
         if Auth.auth().currentUser == nil && !loggedin {
             Form{
+                logo
+                    .resizable()
+                    .scaledToFit()
                 if promptAddress {
                     Section(footer: Text("Enter your mailing address in case you win a gift card.")) {
                         TextField("Line 1", text: $addressLine1)
