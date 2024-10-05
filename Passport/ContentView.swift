@@ -697,6 +697,7 @@ struct ContentView: View {
                 .onTapGesture {
                     
                     if show == "home"{
+                        promptAddress = false
                         loggedin = false
                         verifiable = false
                         signOut()
