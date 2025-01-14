@@ -19,10 +19,66 @@ struct PassportApp: App {
         }
     }
 }
+struct Configuration {
+    static var config: PlistConfig = {
+        guard let url = Bundle.main.url(forResource: "Info", withExtension: "plist") else {
+            fatalError("Couldn't find Info.plist file.")
+        }
+        do {
+            let decoder = PropertyListDecoder()
+            let data = try Data(contentsOf: url)
+            return try decoder.decode(PlistConfig.self, from: data)
+        } catch let error {
+            //fatalError("Couldn't parse Config.plist data. \(error.localizedDescription)")
+            fatalError("\(error)")
+        }
+    }()
+}
+
+struct PlistConfig: Codable {
+    let firebaseApiKey: String
+    let firebaseGcmSenderId: String
+    let firebasePListVersion: String
+    let firebaseBundleId: String
+    let firebaseProjectId: String
+    let firebaseStorageBucket: String
+    let firebaseAppId: String
+
+    enum CodingKeys: String, CodingKey {
+        case firebaseApiKey = "FIRE_API_KEY"
+        case firebaseGcmSenderId = "FIRE_GCM_SENDER_ID"
+        case firebasePListVersion = "FIRE_PLIST_VERSION"
+        case firebaseBundleId = "FIRE_BUNDLE_ID"
+        case firebaseProjectId = "FIRE_PROJECT_ID"
+        case firebaseStorageBucket = "FIRE_STORAGE_BUCKET"
+        case firebaseAppId = "FIRE_GOOGLE_APP_ID"
+    }
+}
+
+extension PlistConfig {
+    func toJSON() -> String? {
+        let encoder = JSONEncoder()
+        do {
+            let jsonData = try encoder.encode(self)
+            let jsonString = String(data: jsonData, encoding: .utf8)
+            //print("jsonString \(jsonString)")
+            return jsonString
+        } catch {
+            print("Error encoding PlistConfig to JSON: \(error)")
+            return nil
+        }
+    }
+}
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-        FirebaseApp.configure()
+        
+        let plist = Configuration.config
+        let options = FirebaseOptions(googleAppID: plist.firebaseAppId, gcmSenderID: plist.firebaseGcmSenderId)
+        options.apiKey = plist.firebaseApiKey
+        options.projectID = plist.firebaseProjectId
+        FirebaseApp.configure(options: options)
+        
         print("application is starting up. ApplicationDelegate didFinishLaunchingWithOptions.")
         return true
     }

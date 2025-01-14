@@ -15,10 +15,24 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.712511258077-mpu6rpug3v91g08gj82bk7ucrl5kbo4n</string>
+				<string>app-1-712511258077-ios-2606a7f049a1bedba34a34</string>
 			</array>
 		</dict>
 	</array>
+	<key>FIRE_API_KEY</key>
+	<string>$(FIRE_API_KEY)</string>
+	<key>FIRE_BUNDLE_ID</key>
+	<string>$(FIRE_BUNDLE_ID)</string>
+	<key>FIRE_GCM_SENDER_ID</key>
+	<string>$(FIRE_GCM_SENDER_ID)</string>
+	<key>FIRE_GOOGLE_APP_ID</key>
+	<string>$(FIRE_GOOGLE_APP_ID)</string>
+	<key>FIRE_PLIST_VERSION</key>
+	<string>$(FIRE_PLIST_VERSION)</string>
+	<key>FIRE_PROJECT_ID</key>
+	<string>$(FIRE_PROJECT_ID)</string>
+	<key>FIRE_STORAGE_BUCKET</key>
+	<string>$(FIRE_STORAGE_BUCKET)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

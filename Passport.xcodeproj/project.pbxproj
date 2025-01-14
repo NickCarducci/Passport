@@ -15,7 +15,7 @@
 		A33258922C9127860061371F /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A33258912C9127860061371F /* FirebaseAuth */; };
 		A33258942C9127860061371F /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A33258932C9127860061371F /* FirebaseFirestore */; };
 		A3C0DDC12C948E9A0092DC82 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = A3C0DDC02C948E9A0092DC82 /* FirebaseMessaging */; };
-		A3C0DDD12C96147C0092DC82 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A3C0DDD02C96147C0092DC82 /* GoogleService-Info.plist */; };
+		A3DE28602D36D71000EA2B1A /* Config-dev.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = A3DE285F2D36D71000EA2B1A /* Config-dev.xcconfig */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,7 +26,8 @@
 		A32A20282C8C8D3B0059417C /* Passport.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Passport.entitlements; sourceTree = "<group>"; };
 		A32A202A2C8C8D3B0059417C /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		A38850E42C8D00F300CCBF22 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		A3C0DDD02C96147C0092DC82 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		A3DE285C2D36CAF600EA2B1A /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		A3DE285F2D36D71000EA2B1A /* Config-dev.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Config-dev.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,13 +65,14 @@
 		A32A20212C8C8D390059417C /* Passport */ = {
 			isa = PBXGroup;
 			children = (
-				A3C0DDD02C96147C0092DC82 /* GoogleService-Info.plist */,
 				A38850E42C8D00F300CCBF22 /* Info.plist */,
 				A32A20222C8C8D390059417C /* PassportApp.swift */,
 				A32A20242C8C8D390059417C /* ContentView.swift */,
 				A32A20262C8C8D3B0059417C /* Assets.xcassets */,
 				A32A20282C8C8D3B0059417C /* Passport.entitlements */,
 				A32A20292C8C8D3B0059417C /* Preview Content */,
+				A3DE285C2D36CAF600EA2B1A /* Config.xcconfig */,
+				A3DE285F2D36D71000EA2B1A /* Config-dev.xcconfig */,
 			);
 			path = Passport;
 			sourceTree = "<group>";
@@ -124,7 +126,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1540;
-				LastUpgradeCheck = 1540;
+				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					A32A201E2C8C8D390059417C = {
 						CreatedOnToolsVersion = 15.4;
@@ -158,9 +160,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A3DE28602D36D71000EA2B1A /* Config-dev.xcconfig in Resources */,
 				A32A202B2C8C8D3B0059417C /* Preview Assets.xcassets in Resources */,
 				A32A20272C8C8D3B0059417C /* Assets.xcassets in Resources */,
-				A3C0DDD12C96147C0092DC82 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -181,6 +183,7 @@
 /* Begin XCBuildConfiguration section */
 		A32A202C2C8C8D3B0059417C /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A3DE285F2D36D71000EA2B1A /* Config-dev.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -213,6 +216,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -242,6 +246,7 @@
 		};
 		A32A202D2C8C8D3B0059417C /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A3DE285C2D36CAF600EA2B1A /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -274,6 +279,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -295,12 +301,14 @@
 		};
 		A32A202F2C8C8D3B0059417C /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A3DE285F2D36D71000EA2B1A /* Config-dev.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Passport/Passport.entitlements;
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Passport/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 7279TDDFK4;
@@ -311,12 +319,16 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Passport;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan QR codes";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -330,7 +342,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Standard Profile";
-				SDKROOT = auto;
+				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -341,12 +353,14 @@
 		};
 		A32A20302C8C8D3B0059417C /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A3DE285C2D36CAF600EA2B1A /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Passport/Passport.entitlements;
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Passport/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 7279TDDFK4;
@@ -357,12 +371,16 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Passport;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan QR codes";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -376,7 +394,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Standard Profile";
-				SDKROOT = auto;
+				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
