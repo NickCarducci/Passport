@@ -1,0 +1,16 @@
+//
+//  Config-dev.xcconfig
+//  Passport
+//
+//  Created by Nicholas Carducci on 1/14/25.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+FIRE_API_KEY = AIzaSyAdai5yyznEX-UY7O5sZO7KRuKVc20_YwY
+FIRE_GCM_SENDER_ID = 712511258077
+FIRE_PLIST_VERSION  = 1
+FIRE_BUNDLE_ID = com.sayists.Passport
+FIRE_PROJECT_ID = passport-s0989374
+FIRE_GOOGLE_APP_ID = 1:712511258077:ios:2606a7f049a1bedba34a34
+FIRE_STORAGE_BUCKET = passport-s0989374.appspot.com
