@@ -19,7 +19,7 @@ struct PassportApp: App {
         }
     }
 }
-struct Configuration {
+/*struct FBConfiguration {
     static var config: PlistConfig = {
         guard let url = Bundle.main.url(forResource: "Info", withExtension: "plist") else {
             fatalError("Couldn't find Info.plist file.")
@@ -68,16 +68,16 @@ extension PlistConfig {
             return nil
         }
     }
-}
+}*/
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         
-        let plist = Configuration.config
+        /*let plist = FBConfiguration.config
         let options = FirebaseOptions(googleAppID: plist.firebaseAppId, gcmSenderID: plist.firebaseGcmSenderId)
         options.apiKey = plist.firebaseApiKey
-        options.projectID = plist.firebaseProjectId
-        FirebaseApp.configure(options: options)
+        options.projectID = plist.firebaseProjectId*/
+        FirebaseApp.configure()
         
         print("application is starting up. ApplicationDelegate didFinishLaunchingWithOptions.")
         return true

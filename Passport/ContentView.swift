@@ -102,6 +102,8 @@ enum FirebaseError: Error {
     case VerificatrionEmpty
 }
 struct ContentView: View {
+    //@AppStorage("username") var username: String = ""
+    
     @Environment(\.scenePhase) var scenePhase
     
     @State var alertCamera = "Go to Settings, Passport, and then Allow Passport to Access: Camera"
@@ -119,13 +121,13 @@ struct ContentView: View {
     @State var country = ""
     @State var smsTextCode = ""
     @State var deniedCamera = true
-    @State var loggedin = false
+    @State var loggedin = true
     @State var verificationId = ""
     @State var verifiable = false
     @State var testing = false
     //@State var session: User = User(coder: NSCoder())!
     
-    @State var newUsername = ""
+    @State var username = ""
     @State private var rocks = [Event]()
     @State private var leaders = [Leader]()
     @State public var show: String = "home"
@@ -275,7 +277,8 @@ struct ContentView: View {
                     let dataDescription = document.data().map(String.init(describing:)) ?? "nil"
                     print("Document data: \(dataDescription)")
                     let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",location: document["location"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [],descriptionLink: document["descriptionLink"] as? String ?? "")
-                    if event.attendees.contains(Auth.auth().currentUser?.uid ?? "") {
+                    let savedUsername = defaults.object(forKey:"Username") as? String ?? String()
+                    if savedUsername == "" || event.attendees.contains(savedUsername) {
                         return
                     }
                     
@@ -284,19 +287,25 @@ struct ContentView: View {
                     // Set the "capital" field of the city 'DC'
                     do {
                         try await eventRef.updateData([
-                            "attendees": FieldValue.arrayUnion([Auth.auth().currentUser?.uid ?? ""])
+                            "attendees": FieldValue.arrayUnion([savedUsername])
                         ])
                         print("Document successfully updated")
                     } catch {
                         print("Error updating document: \(error)")
                     }
                     
-                    let leadersRef = db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "")
+                    let leadersRef = db.collection("leaders").document(savedUsername)
                     
                     // Set the "capital" field of the city 'DC'
+                    let savedFullName = defaults.object(forKey:"FullName") as? String ?? String()
+                    let savedStudentId = defaults.object(forKey:"StudentId") as? String ?? String()
+                    let savedAddress = defaults.object(forKey:"Address") as? String ?? String()
                     do {
                         try await leadersRef.updateData([
-                            "eventsAttended": FieldValue.increment(Int64(1))
+                            "eventsAttended": FieldValue.increment(Int64(1)),
+                            "fullName": savedFullName,
+                            "studentId": savedStudentId,
+                            "address": savedAddress
                         ])
                         print("Document successfully updated")
                     } catch {
@@ -315,224 +324,9 @@ struct ContentView: View {
         }
     }
     let logo = Image("PassportWeek_Logo")
+    let defaults = UserDefaults.standard
     var body: some View {
         //Auth.auth().currentUser == nil &&
-        if !loggedin {
-            Form{
-                logo
-                    .resizable()
-                    .scaledToFit()
-                if promptAddress {
-                    Section(footer: Text("Enter your mailing address in case you win a gift card.")) {
-                        TextField("Full Name", text: $fullName)
-                            .font(Font.system(size: 15))
-                            .fontWeight(.semibold)
-                            .frame(width: nil, height: nil, alignment: .leading)
-                            .onChange(of: fullName) {
-                                verifiable = false
-                            }
-                        TextField("Student ID (s0989374)", text: $studentId)
-                            .font(Font.system(size: 15))
-                            .fontWeight(.semibold)
-                            .frame(width: nil, height: nil, alignment: .leading)
-                            .onChange(of: studentId) {
-                                verifiable = false
-                            }
-                        TextField("Line 1", text: $addressLine1)
-                            .font(Font.system(size: 15))
-                            .fontWeight(.semibold)
-                            .frame(width: nil, height: nil, alignment: .leading)
-                            .onChange(of: addressLine1) {
-                                verifiable = false
-                            }
-                        TextField("Line 2", text: $addressLine2)
-                            .font(Font.system(size: 15))
-                            .fontWeight(.semibold)
-                            .frame(width: nil, height: nil, alignment: .leading)
-                            .onChange(of: addressLine2) {
-                                verifiable = false
-                            }
-                        TextField("City", text: $city)
-                            .font(Font.system(size: 15))
-                            .fontWeight(.semibold)
-                            .frame(width: nil, height: nil, alignment: .leading)
-                            .onChange(of: city) {
-                                verifiable = false
-                            }
-                        TextField("State", text: $state)
-                            .font(Font.system(size: 15))
-                            .fontWeight(.semibold)
-                            .frame(width: nil, height: nil, alignment: .leading)
-                            .onChange(of: state) {
-                                verifiable = false
-                            }
-                        TextField("Zip Code", text: $zipCode)
-                            .font(Font.system(size: 15))
-                            .fontWeight(.semibold)
-                            .frame(width: nil, height: nil, alignment: .leading)
-                            .onChange(of: zipCode) {
-                                verifiable = false
-                            }
-                    }
-                }
-                if !promptAddress {
-                    Section(footer: Text("Get an SMS code. Standard messaging rates apply.")) {
-                        TextField("Country code", text: $countryCodeNumber)
-                            .font(Font.system(size: 15))
-                            .fontWeight(.semibold)
-                            .frame(width: nil, height: nil, alignment: .leading)
-                            .onChange(of: countryCodeNumber) {
-                                verifiable = false
-                            }
-                        TextField("Enter your phone number", text: $phoneNumber)
-                            .font(Font.system(size: 15))
-                            .fontWeight(.semibold)
-                            .frame(width: nil, height: nil, alignment: .leading)
-                            .onChange(of: phoneNumber) {
-                                verifiable = false
-                            }
-                    }
-                    if verifiable {
-                        Section{
-                            TextField("SMS code", text: $smsTextCode)
-                                .font(Font.system(size: 15))
-                                .fontWeight(.semibold)
-                                .frame(width: nil, height: nil, alignment: .leading)
-                                .onChange(of: smsTextCode) {
-                                    
-                                }
-                        }
-                    }
-                }
-                Button("Submit", action: {
-                    
-                    if promptAddress {
-                        if fullName == "" {
-                            return print("No full name")
-                        }
-                        if studentId == "" {
-                            return print("No student id")
-                        }
-                        if addressLine1 == "" {
-                            return print("No address line 1")
-                        }
-                        if city == "" {
-                            return print("No city")
-                        }
-                        if state == "" {
-                            return print("No state")
-                        }
-                        if zipCode == "" {
-                            return print("No zip code")
-                        }
-                        if addressLine2 == "" {
-                            address = addressLine1 + ", "
-                            + city + ", "
-                            + state + " " + zipCode
-                        }else {
-                            address = addressLine1 + ", "
-                            + addressLine2 + ", "
-                            + city + ", "
-                            + state + " " + zipCode
-                        }
-                        Task {
-                            do {
-                                try await db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "").setData([
-                                    "fullName": fullName,
-                                    "studentId": studentId,
-                                    "username": "Student",
-                                    "eventsAttended": 0,
-                                    "phone": phoneNumber,
-                                    "address": address
-                                ])
-                                print("Welcome to Passport!")
-                                loggedin = true
-                            } catch {
-                                print("Error writing document: \(error)")
-                            }
-                        }
-                    }
-                    
-                    if !verifiable {
-                        /*let _ = Auth.auth().addStateDidChangeListener({ (auth, user) in
-                            if let _ = user {
-                                loggedin = true
-                                //session = user
-                            } else {
-                                loggedin = false
-                                //session = User(coder: NSCoder())!
-                            }
-                        })*/
-                        
-                        //testing = true
-                        //Auth.auth().settings?.isAppVerificationDisabledForTesting = true
-                        if phoneNumber == "" {
-                            print("No phone number")
-                            return
-                        }
-                        if countryCodeNumber == "" {
-                            return
-                        }
-                        let _ = PhoneAuthProvider.provider(auth: Auth.auth())
-                        let phoneNumber = String(format: "+%@", countryCodeNumber + phoneNumber)
-                        PhoneAuthProvider.provider().verifyPhoneNumber( phoneNumber, uiDelegate: nil) { verificationID, error in
-                            if error != nil {
-                                print(error!.localizedDescription)
-                                return
-                            }
-                            guard let verificationID = verificationID else {
-                                print(FirebaseError.VerificatrionEmpty)
-                                return
-                            }
-                            verificationId = verificationID
-                            verifiable = true
-                        }
-                        //verifiable = true
-                    } else {
-                        let credential = PhoneAuthProvider.provider().credential(
-                          withVerificationID: verificationId,
-                          verificationCode: smsTextCode
-                        )
-                        Auth.auth().signIn(with: credential) { authResult, error in
-                            if error != nil {
-                                print(error?.localizedDescription ?? "")
-                                return
-                            }
-                            guard let authResult = authResult else {
-                                print(FirebaseError.VerificatrionEmpty)
-                                return
-                            }
-                            _ = authResult
-                            
-                            Task {
-                                let docRef = db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "")
-                                
-                                do {
-                                    let document = try await docRef.getDocument()
-                                    if document.exists {
-                                        print("Document already exists")
-                                        loggedin = true
-                                    } else {
-                                        promptAddress = true
-                                    }
-                                } catch {
-                                    print("Error getting document: \(error)")
-                                }
-                                //loggedin = true
-                            }
-                        }
-                        //loggedin = true
-                    }
-                    
-                    
-                })
-                /*Section(footer: Text("Sign in with Microsoft.")) {
-                    Button(action: signIn) {
-                        Text("Sign in with Microsoft")
-                    }
-                }*/
-            }
-        }
         if(testing){
             Text(countryCodeNumber + phoneNumber)
         }
@@ -577,66 +371,126 @@ struct ContentView: View {
             if show == "leaderboard"{
                 VStack(alignment: .leading) {
                     Form{
-                        Section(footer: Text("Your username may appear on the leaderboard.")) {
-                            TextField("Username", text: $newUsername)
+                        Section(footer: Text("Enter your mailing address in case you win a gift card.")) {
+                            TextField("Full Name", text: $fullName)
                                 .font(Font.system(size: 15))
                                 .fontWeight(.semibold)
                                 .frame(width: nil, height: nil, alignment: .leading)
-                                .onChange(of: newUsername) {
+                                .onChange(of: fullName) {
+                                    verifiable = false
+                                }
+                            TextField("Student ID (s0989374)", text: $studentId)
+                                .font(Font.system(size: 15))
+                                .fontWeight(.semibold)
+                                .frame(width: nil, height: nil, alignment: .leading)
+                                .onChange(of: studentId) {
+                                    verifiable = false
+                                }
+                            TextField("Line 1", text: $addressLine1)
+                                .font(Font.system(size: 15))
+                                .fontWeight(.semibold)
+                                .frame(width: nil, height: nil, alignment: .leading)
+                                .onChange(of: addressLine1) {
+                                    verifiable = false
+                                }
+                            TextField("Line 2", text: $addressLine2)
+                                .font(Font.system(size: 15))
+                                .fontWeight(.semibold)
+                                .frame(width: nil, height: nil, alignment: .leading)
+                                .onChange(of: addressLine2) {
+                                    verifiable = false
+                                }
+                            TextField("City", text: $city)
+                                .font(Font.system(size: 15))
+                                .fontWeight(.semibold)
+                                .frame(width: nil, height: nil, alignment: .leading)
+                                .onChange(of: city) {
+                                    verifiable = false
+                                }
+                            TextField("State", text: $state)
+                                .font(Font.system(size: 15))
+                                .fontWeight(.semibold)
+                                .frame(width: nil, height: nil, alignment: .leading)
+                                .onChange(of: state) {
+                                    verifiable = false
+                                }
+                            TextField("Zip Code", text: $zipCode)
+                                .font(Font.system(size: 15))
+                                .fontWeight(.semibold)
+                                .frame(width: nil, height: nil, alignment: .leading)
+                                .onChange(of: zipCode) {
+                                    verifiable = false
+                                }
+                        }
+                        Section(footer: Text("Your username may appear on the leaderboard.")) {
+                            TextField("Username", text: $username)
+                                .font(Font.system(size: 15))
+                                .fontWeight(.semibold)
+                                .frame(width: nil, height: nil, alignment: .leading)
+                                .onChange(of: username) {
                                     //verifiable = false
                                 }
                             Button("Save", action: {
-                                Task {
-                                    do {
-                                        let querySnapshot = try await db.collection("leaders").whereField("username", isEqualTo: newUsername)
-                                          .getDocuments()
-                                        for document in querySnapshot.documents {
-                                          print("\(document.documentID) => \(document.data())")
-                                        }
-                                        if querySnapshot.documents.isEmpty {
-                                            print("saving username")
-                                            let leaderRef = db.collection("leaders").document(Auth.auth().currentUser?.uid ?? "")
-                                            
-                                            // Set the "username" field of the leader 'newUsername'
-                                            do {
-                                                try await leaderRef.updateData([
-                                                    "username": newUsername
-                                                ])
-                                                print("Document successfully updated")
-                                            } catch {
-                                                print("Error updating document: \(error)")
-                                            }
-                                        } else {
-                                            print("username already exists")
-                                        }
-                                    } catch {
-                                    print("Error getting documents: \(error)")
-                                    }
+                                if username == "" {
+                                    return print("No full name")
                                 }
+                                if fullName == "" {
+                                    return print("No full name")
+                                }
+                                if studentId == "" {
+                                    return print("No student id")
+                                }
+                                if addressLine1 == "" {
+                                    return print("No address line 1")
+                                }
+                                if city == "" {
+                                    return print("No city")
+                                }
+                                if state == "" {
+                                    return print("No state")
+                                }
+                                if zipCode == "" {
+                                    return print("No zip code")
+                                }
+                                if addressLine2 == "" {
+                                    address = addressLine1 + ", "
+                                    + city + ", "
+                                    + state + " " + zipCode
+                                }else {
+                                    address = addressLine1 + ", "
+                                    + addressLine2 + ", "
+                                    + city + ", "
+                                    + state + " " + zipCode
+                                }
+                                defaults.set(username, forKey: "Username")
+                                defaults.set(address, forKey: "Address")
+                                defaults.set(studentId, forKey: "StudentId")
+                                defaults.set(fullName, forKey: "FullName")
                             })
                         }
-                    }
-                    Text("Update Leaderboard")
-                        .font(Font.system(size: 15))
-                        .fontWeight(.semibold)
-                        .frame(width: nil, height: nil, alignment: .leading)
-                        .onTapGesture {
-                            getLeaders()
-                        }
-                        .padding(10)
-                    
-                    GeometryReader { geometry in
-                        ScrollView {
-                            List {
-                                ForEach ($leaders.indices, id: \.self){ index in
-                                    LeaderView(username:$leaders[index].username,eventsAttended:$leaders[index].eventsAttended
-                                    )
-                                }
+                        
+                        Text("Update Leaderboard")
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .frame(width: nil, height: nil, alignment: .leading)
+                            .onTapGesture {
+                                getLeaders()
                             }
-                            .frame(width: geometry.size.width,
-                                   height: geometry.size.height)
+                            .padding(10)
+                        
+                        GeometryReader { geometry in
+                            ScrollView {
+                                List {
+                                    ForEach ($leaders.indices, id: \.self){ index in
+                                        LeaderView(username:$leaders[index].username,eventsAttended:$leaders[index].eventsAttended
+                                        )
+                                    }
+                                }
+                                .frame(width: geometry.size.width,
+                                       height: geometry.size.height)
+                            }
+                            //.frame(height: .infinity)
                         }
-                        //.frame(height: .infinity)
                     }
                 }
                 //.frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -690,7 +544,7 @@ struct ContentView: View {
                     }
                 }
             }
-            Text(show != "home" ? "back" : "logout")
+            Text(show != "home" ? "back" : "")
                 .font(Font.system(size: 15))
                 .fontWeight(.semibold)
                 .frame(width: nil, height: nil, alignment: .leading)
@@ -700,7 +554,7 @@ struct ContentView: View {
                         promptAddress = false
                         loggedin = false
                         verifiable = false
-                        signOut()
+                        //signOut()
                     } else {
                         show = "home"
                     }
