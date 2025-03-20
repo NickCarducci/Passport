@@ -40,6 +40,18 @@ struct EventView: View {
         }
     }
 }
+struct Message {
+    var message: String
+}
+extension Message: Decodable {
+    enum CodingKeys: String, CodingKey {
+        case message = "message"
+    }
+    init(from decoder: Decoder) throws {
+        let podcastContainer = try decoder.container(keyedBy: CodingKeys.self)
+        self.message = try podcastContainer.decode(String.self, forKey: .message)
+    }
+}
 struct Event {
     var id: String
     var title: String
@@ -97,6 +109,18 @@ extension Leader: Decodable {
     }
 }
 
+struct Leaders {
+    var features: Array<Leader>
+}
+extension Leaders: Decodable {
+    enum CodingKeys: String, CodingKey {
+        case features = "features"
+    }
+    init(from decoder: Decoder) throws {
+        let podcastContainer = try decoder.container(keyedBy: CodingKeys.self)
+        self.features = try podcastContainer.decode([Leader].self, forKey: .features)
+    }
+}
 enum FirebaseError: Error {
     case Error
     case VerificatrionEmpty
@@ -129,7 +153,7 @@ struct ContentView: View {
     
     @State var username = ""
     @State private var rocks = [Event]()
-    @State private var leaders = [Leader]()
+    @State private var leaderboard = [Leader]()
     @State public var show: String = "home"
     @State public var openedEvent: String = ""
     @State public var eventTitle: String = "Scan a QR code"
@@ -217,32 +241,36 @@ struct ContentView: View {
                 }
     }
     func getLeaders () {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        leaderboard = []
+        let urlString = "https://"
+        let url = URL(string: urlString)!
+        print("searching \(urlString)")
+        //let (data, _) = try await URLSession.shared.data(from: url)
         
-        leaders = []
-        let db = Firestore.firestore()
-        db.collection("leaders")//.whereField("city", isEqualTo: placename)
-            .order(by: "eventsAttended", descending: false)
-            .getDocuments() { (querySnapshot, error) in
-                        if let error = error {
-                                print("Error getting documents: \(error)")
-                        } else {
-                                if querySnapshot!.documents.isEmpty {
-                                    return print("is empty")
-                                }
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            //if error != nil { return print(error) }
+            if let data = data{
+                do {
+                   let leaders = try decoder.decode(Leaders.self, from: data)
+                    print("found \(leaders)")
+                    //place = try decoder.decode(Place.self, from: data)
+                    //print(place)
+                    DispatchQueue.main.async {
+                        if leaders.features.count == 0 {return}
+                        leaderboard = leaders.features
+                        //print(post)
+                        /*leaders.features.forEach { body in
                             
-                                for document in querySnapshot!.documents {
-                                        //print("\(document.documentID): \(document.data())")
-                                    let leader = Leader(id: document.documentID,username: document["username"] as? String ?? "",eventsAttended: document["eventsAttended"] as? Int64 ?? 0)
-                                    //print(post)
-                                    
-                                    leaders.append(leader)
-                                    
-                                }
-                            leaders.sort {
-                                $0.eventsAttended > $1.eventsAttended
-                            }
-                        }
+                            leaderboard.append(Leader(id: body["id"]as? String ?? "",username: body["username"] as? String ?? "",eventsAttended: body["eventsAttended"] as? Int64 ?? 0))
+                        }*/
+                    }
+                } catch {
+                    print(error)
                 }
+            }
+        }
     }
     func openEvent (eventId: String) {
         
@@ -264,11 +292,38 @@ struct ContentView: View {
               }
         }
     }
-    func attendEvent (eventId:String) {
-        deniedCamera = true
-        
+    func attendEvent (eventId:String, studentId:String) {
+        if studentId == "" {return}
         Task {
-            let docRef = db.collection("events").document(eventId)
+            let urlString = "https://starfish-app-x5itk.ondigitalocean.app/attend"
+            let url = URL(string: urlString)!
+            print("searching \(urlString)")
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            let postString = "eventId=\(eventId)&studentId=\(studentId)"
+            request.httpBody = postString.data(using: .utf8)
+            //let (data, _) = try await URLSession.shared.data(from: url)
+            
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                //if error != nil { return print(error) }
+                if let data = data{
+                    do {
+                        let messenger = try JSONDecoder().decode(Message.self, from: data)
+                        print("found \(messenger)")
+                        //place = try decoder.decode(Place.self, from: data)
+                        //print(place)
+                        DispatchQueue.main.async {
+                            if messenger.message == "attended" {
+                                deniedCamera = true
+                            }
+                        }
+                    } catch {
+                        print(error)
+                    }
+                }
+            }
+            task.resume()
+            /*let docRef = db.collection("events").document(eventId)
             
             do {
                 let document = try await docRef.getDocument()
@@ -277,8 +332,8 @@ struct ContentView: View {
                     let dataDescription = document.data().map(String.init(describing:)) ?? "nil"
                     print("Document data: \(dataDescription)")
                     let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",location: document["location"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [],descriptionLink: document["descriptionLink"] as? String ?? "")
-                    let savedUsername = defaults.object(forKey:"Username") as? String ?? String()
-                    if savedUsername == "" || event.attendees.contains(savedUsername) {
+                    let savedStudentId = defaults.object(forKey:"StudentId") as? String ?? String()
+                    if savedStudentId == "" || event.attendees.contains(savedStudentId) {
                         return
                     }
                     
@@ -287,27 +342,39 @@ struct ContentView: View {
                     // Set the "capital" field of the city 'DC'
                     do {
                         try await eventRef.updateData([
-                            "attendees": FieldValue.arrayUnion([savedUsername])
+                            "attendees": FieldValue.arrayUnion([savedStudentId])
                         ])
                         print("Document successfully updated")
                     } catch {
                         print("Error updating document: \(error)")
                     }
                     
-                    let leadersRef = db.collection("leaders").document(savedUsername)
+                    let leadersRef = db.collection("leaders").document(savedStudentId)
                     
                     // Set the "capital" field of the city 'DC'
                     let savedFullName = defaults.object(forKey:"FullName") as? String ?? String()
-                    let savedStudentId = defaults.object(forKey:"StudentId") as? String ?? String()
+                    let savedUsername = defaults.object(forKey:"Username") as? String ?? String()
                     let savedAddress = defaults.object(forKey:"Address") as? String ?? String()
                     do {
-                        try await leadersRef.updateData([
-                            "eventsAttended": FieldValue.increment(Int64(1)),
-                            "fullName": savedFullName,
-                            "studentId": savedStudentId,
-                            "address": savedAddress
-                        ])
-                        print("Document successfully updated")
+                        
+                        let document = try await leadersRef.getDocument()
+                        if document.exists {
+                            try await leadersRef.updateData([
+                                "eventsAttended": FieldValue.increment(Int64(1)),
+                                "fullName": savedFullName,
+                                "username": savedUsername,
+                                "address": savedAddress
+                            ])
+                            print("Document successfully updated")
+                        } else {
+                            try await leadersRef.setData([
+                                "eventsAttended": FieldValue.increment(Int64(1)),
+                                "fullName": savedFullName,
+                                "username": savedUsername,
+                                "address": savedAddress
+                            ])
+                            print("Document successfully added")
+                        }
                     } catch {
                         print("Error updating document: \(error)")
                     }
@@ -319,7 +386,7 @@ struct ContentView: View {
             } catch {
                 alertCamera = "Event doesn't exist"
                 print("Error getting document: \(error)")
-            }
+            }*/
             
         }
     }
@@ -481,8 +548,8 @@ struct ContentView: View {
                         GeometryReader { geometry in
                             ScrollView {
                                 List {
-                                    ForEach ($leaders.indices, id: \.self){ index in
-                                        LeaderView(username:$leaders[index].username,eventsAttended:$leaders[index].eventsAttended
+                                    ForEach ($leaderboard.indices, id: \.self){ index in
+                                        LeaderView(username:$leaderboard[index].username,eventsAttended:$leaderboard[index].eventsAttended
                                         )
                                     }
                                 }
@@ -534,8 +601,13 @@ struct ContentView: View {
                     CodeScannerView(codeTypes: [.qr], simulatedData: "PUCYMbQTTVlmTitXH8nO") { response in
                         switch response {
                         case .success(let result):
-                            openEvent(eventId: result.string)
-                            attendEvent(eventId: result.string)
+                            //openEvent(eventId: result.string)
+                            
+                            let savedStudentId = defaults.object(forKey:"StudentId") as? String ?? String()
+                            if savedStudentId != ""  {
+                                attendEvent(eventId: result.string,
+                                            studentId: savedStudentId)
+                            }
                         case .failure(let error):
                             deniedCamera = true
                             alertCamera = error.localizedDescription + ". Try again."
