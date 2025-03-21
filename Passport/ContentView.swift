@@ -295,13 +295,20 @@ struct ContentView: View {
     func attendEvent (eventId:String, studentId:String) {
         if studentId == "" {return}
         Task {
+            let parameterDictionary = ["eventId" : eventId, "studentId": studentId]
             let urlString = "https://starfish-app-x5itk.ondigitalocean.app/attend"
             let url = URL(string: urlString)!
             print("searching \(urlString)")
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
-            let postString = "eventId=\(eventId)&studentId=\(studentId)"
-            request.httpBody = postString.data(using: .utf8)
+            request.setValue("Application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("aplication/x-www-form-urlencoded", forHTTPHeaderField: "String")
+            guard let httpBody = try? JSONSerialization.data(withJSONObject: parameterDictionary, options: []) else {
+                return
+            }
+            request.httpBody = httpBody
+            /*let postString = "eventId=\(eventId)&studentId=\(studentId)"
+            request.httpBody = postString.data(using: .utf8)*/
             //let (data, _) = try await URLSession.shared.data(from: url)
             
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
@@ -312,11 +319,11 @@ struct ContentView: View {
                         print("found \(messenger)")
                         //place = try decoder.decode(Place.self, from: data)
                         //print(place)
-                        DispatchQueue.main.async {
+                        //DispatchQueue.main.async {
                             if messenger.message == "attended" {
                                 deniedCamera = true
                             }
-                        }
+                    
                     } catch {
                         print(error)
                     }
