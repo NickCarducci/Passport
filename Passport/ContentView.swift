@@ -293,7 +293,7 @@ struct ContentView: View {
         }
     }
     func attendEvent (eventId:String, studentId:String) {
-        if studentId == "" {return}
+        //if studentId == "" {return}
         Task {
             let parameterDictionary = ["eventId" : eventId, "studentId": studentId]
             let urlString = "https://starfish-app-x5itk.ondigitalocean.app/attend"
@@ -320,8 +320,9 @@ struct ContentView: View {
                         //place = try decoder.decode(Place.self, from: data)
                         //print(place)
                         //DispatchQueue.main.async {
-                            if messenger.message == "attended" {
+                            if messenger.message == "attended" || messenger.message == "already attended." {
                                 deniedCamera = true
+                                eventTitle = messenger.message
                             }
                     
                     } catch {
@@ -446,14 +447,14 @@ struct ContentView: View {
                 VStack(alignment: .leading) {
                     Form{
                         Section(footer: Text("Enter your mailing address in case you win a gift card.")) {
-                            TextField("Full Name", text: $fullName)
+                            TextField("Full Name \(defaults.object(forKey:"FullName") as? String ?? "Jane Doe")", text: $fullName)
                                 .font(Font.system(size: 15))
                                 .fontWeight(.semibold)
                                 .frame(width: nil, height: nil, alignment: .leading)
                                 .onChange(of: fullName) {
                                     verifiable = false
                                 }
-                            TextField("Student ID (s0989374)", text: $studentId)
+                            TextField("Student ID \( defaults.object(forKey:"StudentId") as? String ?? "s0989374")", text: $studentId)
                                 .font(Font.system(size: 15))
                                 .fontWeight(.semibold)
                                 .frame(width: nil, height: nil, alignment: .leading)
@@ -497,7 +498,7 @@ struct ContentView: View {
                                 }
                         }
                         Section(footer: Text("Your username may appear on the leaderboard.")) {
-                            TextField("Username", text: $username)
+                            TextField("Username \(defaults.object(forKey:"Username") as? String ?? String())", text: $username)
                                 .font(Font.system(size: 15))
                                 .fontWeight(.semibold)
                                 .frame(width: nil, height: nil, alignment: .leading)
@@ -506,7 +507,7 @@ struct ContentView: View {
                                 }
                             Button("Save", action: {
                                 if username == "" {
-                                    return print("No full name")
+                                    return print("No username")
                                 }
                                 if fullName == "" {
                                     return print("No full name")
@@ -601,7 +602,11 @@ struct ContentView: View {
                 }
                 Toggle("Hide camera", isOn: $deniedCamera)
                     .padding(10)
+                    .onChange(of: deniedCamera) {
+                        eventTitle = "Scan a QR code"
+                    }
                 if deniedCamera {
+                    //eventTitle = "Scan a QR code"
                     Text(alertCamera)
                         .font(.system(size: 36))
                 } else {
