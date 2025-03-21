@@ -271,6 +271,7 @@ struct ContentView: View {
                 }
             }
         }
+        task.resume()
     }
     func openEvent (eventId: String) {
         
@@ -324,6 +325,7 @@ struct ContentView: View {
                                 deniedCamera = true
                                 eventTitle = messenger.message
                             }
+                        //openEvent(eventId: eventId)
                     
                     } catch {
                         print(error)
@@ -593,6 +595,10 @@ struct ContentView: View {
                                 Button(action: {
                                     print("Leading button tapped")
                                     show = "list"
+                                    
+                                    /*let savedStudentId = defaults.object(forKey:"StudentId") as? String ?? String()
+                                    attendEvent(eventId: "PUCYMbQTTVlmTitXH8nO",
+                                                studentId: savedStudentId)*/
                                 }) {
                                     Image(systemName: "list.dash")
                                         .foregroundColor(.blue)
@@ -613,7 +619,6 @@ struct ContentView: View {
                     CodeScannerView(codeTypes: [.qr], simulatedData: "PUCYMbQTTVlmTitXH8nO") { response in
                         switch response {
                         case .success(let result):
-                            //openEvent(eventId: result.string)
                             
                             let savedStudentId = defaults.object(forKey:"StudentId") as? String ?? String()
                             if savedStudentId != ""  {
@@ -664,6 +669,7 @@ struct ContentView: View {
                     } else if newPhase == .background {
                         print("Background")
                         deniedCamera = true
+                        eventTitle = "Scan a QR code"
                         alertCamera = "Go to Settings, Passport, and then Allow Passport to Access: Camera"
                     }
                 }
