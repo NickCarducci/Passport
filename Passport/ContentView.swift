@@ -641,7 +641,8 @@ struct ContentView: View {
                 Toggle("Hide camera", isOn: $deniedCamera)
                     .padding(10)
                     .onChange(of: deniedCamera) {
-                        //eventTitle = "Scan a QR code"
+                        if !deniedCamera {eventTitle = "Scan a QR code"}
+                        
                     }
                 if deniedCamera {
                     //eventTitle = "Scan a QR code"
