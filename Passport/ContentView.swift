@@ -319,10 +319,13 @@ struct ContentView: View {
               }
         }
     }
-    func attendEvent (eventId:String, studentId:String) {
+    func attendEvent (eventId:String, studentId:String, address:String, fullName:String, username:String) {
         //if studentId == "" {return}
         Task {
-            let parameterDictionary = ["eventId" : eventId, "studentId": studentId]
+            let parameterDictionary = ["eventId" : eventId, "studentId": studentId,
+                                       "address": address,
+                                       "fullName": fullName,
+                                       "username": username]
             let urlString = "https://starfish-app-x5itk.ondigitalocean.app/attend"
             let url = URL(string: urlString)!
             print("searching \(urlString)")
@@ -484,6 +487,7 @@ struct ContentView: View {
                                     verifiable = false
                                 }
                             TextField("Student ID \( defaults.object(forKey:"StudentId") as? String ?? "s0989374")", text: $studentId)
+                                .textCase(.lowercase)
                                 .font(Font.system(size: 15))
                                 .fontWeight(.semibold)
                                 .frame(width: nil, height: nil, alignment: .leading)
@@ -535,7 +539,7 @@ struct ContentView: View {
                                     //verifiable = false
                                 }
                             Button("Save", action: {
-                                if username == "" {
+                                /*if username == "" {
                                     return print("No username")
                                 }
                                 if fullName == "" {
@@ -555,7 +559,7 @@ struct ContentView: View {
                                 }
                                 if zipCode == "" {
                                     return print("No zip code")
-                                }
+                                }*/
                                 if addressLine2 == "" {
                                     address = addressLine1 + ", "
                                     + city + ", "
@@ -649,9 +653,15 @@ struct ContentView: View {
                         case .success(let result):
                             
                             let savedStudentId = defaults.object(forKey:"StudentId") as? String ?? String()
+                            let savedAddress = defaults.object(forKey:"Address") as? String ?? String()
+                            let savedFullName = defaults.object(forKey:"FullName") as? String ?? String()
+                            let savedUsername = defaults.object(forKey:"Username") as? String ?? String()
                             if savedStudentId != ""  {
                                 attendEvent(eventId: result.string,
-                                            studentId: savedStudentId)
+                                            studentId: savedStudentId,
+                                            address: savedAddress,
+                                            fullName: savedFullName,
+                                            username: savedUsername)
                             }
                         case .failure(let error):
                             deniedCamera = true
