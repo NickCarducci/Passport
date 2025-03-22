@@ -43,14 +43,17 @@ struct EventView: View {
 }
 struct Message {
     var message: String
+    var title: String
 }
 extension Message: Decodable {
     enum CodingKeys: String, CodingKey {
         case message = "message"
+        case title = "title"
     }
     init(from decoder: Decoder) throws {
         let podcastContainer = try decoder.container(keyedBy: CodingKeys.self)
         self.message = try podcastContainer.decode(String.self, forKey: .message)
+        self.title = try podcastContainer.decode(String.self, forKey: .title)
     }
 }
 struct Event {
@@ -351,7 +354,11 @@ struct ContentView: View {
                         //print(place)
                         //DispatchQueue.main.async {
                             if messenger.message == "attended" || messenger.message == "already attended." {
-                                eventTitle = messenger.message
+                                if messenger.message == "attended" {
+                                    eventTitle = messenger.message + " " + messenger.title
+                                } else {
+                                    eventTitle = messenger.message
+                                }
                                 deniedCamera = true
                             }
                         //openEvent(eventId: eventId)
