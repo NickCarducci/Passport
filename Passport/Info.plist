@@ -19,20 +19,6 @@
 			</array>
 		</dict>
 	</array>
-	<key>FIRE_API_KEY</key>
-	<string>$(FIRE_API_KEY)</string>
-	<key>FIRE_BUNDLE_ID</key>
-	<string>$(FIRE_BUNDLE_ID)</string>
-	<key>FIRE_GCM_SENDER_ID</key>
-	<string>$(FIRE_GCM_SENDER_ID)</string>
-	<key>FIRE_GOOGLE_APP_ID</key>
-	<string>$(FIRE_GOOGLE_APP_ID)</string>
-	<key>FIRE_PLIST_VERSION</key>
-	<string>$(FIRE_PLIST_VERSION)</string>
-	<key>FIRE_PROJECT_ID</key>
-	<string>$(FIRE_PROJECT_ID)</string>
-	<key>FIRE_STORAGE_BUCKET</key>
-	<string>$(FIRE_STORAGE_BUCKET)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

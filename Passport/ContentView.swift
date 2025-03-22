@@ -153,7 +153,7 @@ struct ContentView: View {
     
     @State var username = ""
     @State private var rocks = [Event]()
-    @State private var leaderboard = [Leader]()
+    @State private var leaders = [Leader]()
     @State public var show: String = "home"
     @State public var openedEvent: String = ""
     @State public var eventTitle: String = "Scan a QR code"
@@ -241,7 +241,32 @@ struct ContentView: View {
                 }
     }
     func getLeaders () {
-        let decoder = JSONDecoder()
+        leaders = []
+        let db = Firestore.firestore()
+        db.collection("leaders")//.whereField("city", isEqualTo: placename)
+            .order(by: "eventsAttended", descending: false)
+            .getDocuments() { (querySnapshot, error) in
+                        if let error = error {
+                                print("Error getting documents: \(error)")
+                        } else {
+                                if querySnapshot!.documents.isEmpty {
+                                    return print("is empty")
+                                }
+                            
+                                for document in querySnapshot!.documents {
+                                        //print("\(document.documentID): \(document.data())")
+                                    let leader = Leader(id: document.documentID,username: document["username"] as? String ?? "",eventsAttended: document["eventsAttended"] as? Int64 ?? 0)
+                                    //print(post)
+                                    
+                                    leaders.append(leader)
+                                    
+                                }
+                            leaders.sort {
+                                $0.eventsAttended > $1.eventsAttended
+                            }
+                        }
+                }
+        /*let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         leaderboard = []
         let urlString = "https://"
@@ -271,7 +296,7 @@ struct ContentView: View {
                 }
             }
         }
-        task.resume()
+        task.resume()*/
     }
     func openEvent (eventId: String) {
         
@@ -558,8 +583,8 @@ struct ContentView: View {
                         GeometryReader { geometry in
                             ScrollView {
                                 List {
-                                    ForEach ($leaderboard.indices, id: \.self){ index in
-                                        LeaderView(username:$leaderboard[index].username,eventsAttended:$leaderboard[index].eventsAttended
+                                    ForEach ($leaders.indices, id: \.self){ index in
+                                        LeaderView(username:$leaders[index].username,eventsAttended:$leaders[index].eventsAttended
                                         )
                                     }
                                 }

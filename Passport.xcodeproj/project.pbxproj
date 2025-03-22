@@ -14,9 +14,8 @@
 		A32A202B2C8C8D3B0059417C /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A32A202A2C8C8D3B0059417C /* Preview Assets.xcassets */; };
 		A33258922C9127860061371F /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A33258912C9127860061371F /* FirebaseAuth */; };
 		A33258942C9127860061371F /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A33258932C9127860061371F /* FirebaseFirestore */; };
+		A3B95C642D8EF65900AD0FE9 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A3B95C632D8EF65900AD0FE9 /* GoogleService-Info.plist */; };
 		A3C0DDC12C948E9A0092DC82 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = A3C0DDC02C948E9A0092DC82 /* FirebaseMessaging */; };
-		A3DE28602D36D71000EA2B1A /* Config-dev.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = A3DE285F2D36D71000EA2B1A /* Config-dev.xcconfig */; };
-		A3FDFFE32D5527F800A1C456 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A3FDFFE22D5527F700A1C456 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,9 +26,7 @@
 		A32A20282C8C8D3B0059417C /* Passport.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Passport.entitlements; sourceTree = "<group>"; };
 		A32A202A2C8C8D3B0059417C /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		A38850E42C8D00F300CCBF22 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		A3DE285C2D36CAF600EA2B1A /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
-		A3DE285F2D36D71000EA2B1A /* Config-dev.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Config-dev.xcconfig"; sourceTree = "<group>"; };
-		A3FDFFE22D5527F700A1C456 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		A3B95C632D8EF65900AD0FE9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,15 +64,13 @@
 		A32A20212C8C8D390059417C /* Passport */ = {
 			isa = PBXGroup;
 			children = (
-				A3FDFFE22D5527F700A1C456 /* GoogleService-Info.plist */,
+				A3B95C632D8EF65900AD0FE9 /* GoogleService-Info.plist */,
 				A38850E42C8D00F300CCBF22 /* Info.plist */,
 				A32A20222C8C8D390059417C /* PassportApp.swift */,
 				A32A20242C8C8D390059417C /* ContentView.swift */,
 				A32A20262C8C8D3B0059417C /* Assets.xcassets */,
 				A32A20282C8C8D3B0059417C /* Passport.entitlements */,
 				A32A20292C8C8D3B0059417C /* Preview Content */,
-				A3DE285C2D36CAF600EA2B1A /* Config.xcconfig */,
-				A3DE285F2D36D71000EA2B1A /* Config-dev.xcconfig */,
 			);
 			path = Passport;
 			sourceTree = "<group>";
@@ -163,8 +158,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A3DE28602D36D71000EA2B1A /* Config-dev.xcconfig in Resources */,
-				A3FDFFE32D5527F800A1C456 /* GoogleService-Info.plist in Resources */,
+				A3B95C642D8EF65900AD0FE9 /* GoogleService-Info.plist in Resources */,
 				A32A202B2C8C8D3B0059417C /* Preview Assets.xcassets in Resources */,
 				A32A20272C8C8D3B0059417C /* Assets.xcassets in Resources */,
 			);
@@ -187,7 +181,6 @@
 /* Begin XCBuildConfiguration section */
 		A32A202C2C8C8D3B0059417C /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A3DE285F2D36D71000EA2B1A /* Config-dev.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -250,7 +243,6 @@
 		};
 		A32A202D2C8C8D3B0059417C /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A3DE285C2D36CAF600EA2B1A /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -305,7 +297,6 @@
 		};
 		A32A202F2C8C8D3B0059417C /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A3DE285F2D36D71000EA2B1A /* Config-dev.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -357,7 +348,6 @@
 		};
 		A32A20302C8C8D3B0059417C /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A3DE285C2D36CAF600EA2B1A /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
