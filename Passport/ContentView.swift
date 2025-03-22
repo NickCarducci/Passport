@@ -351,8 +351,8 @@ struct ContentView: View {
                         //print(place)
                         //DispatchQueue.main.async {
                             if messenger.message == "attended" || messenger.message == "already attended." {
-                                deniedCamera = true
                                 eventTitle = messenger.message
+                                deniedCamera = true
                             }
                         //openEvent(eventId: eventId)
                     
@@ -641,7 +641,7 @@ struct ContentView: View {
                 Toggle("Hide camera", isOn: $deniedCamera)
                     .padding(10)
                     .onChange(of: deniedCamera) {
-                        eventTitle = "Scan a QR code"
+                        //eventTitle = "Scan a QR code"
                     }
                 if deniedCamera {
                     //eventTitle = "Scan a QR code"
