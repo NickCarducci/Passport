@@ -30,12 +30,13 @@ struct EventView: View {
     @Binding public var location:String
     @Binding public var date:String
     @Binding public var descriptionLink:String
+    @Environment(\.colorScheme) var colorScheme
     let defaults = UserDefaults.standard
     var body: some View {
         HStack{
             Link("\(dateFromString(date:date)) \(title): \(location)",
                  destination: URL(string: descriptionLink)!)
-                .foregroundColor(.black)
+                .foregroundStyle(colorScheme == .dark ? .white : .black)
                 .padding(10)
         }
     }
@@ -440,6 +441,7 @@ struct ContentView: View {
                         .font(Font.system(size: 15))
                         .fontWeight(.semibold)
                         .frame(width: nil, height: nil, alignment: .leading)
+                        .foregroundStyle(.blue)
                         .onTapGesture {
                             getEvents()
                         }
@@ -575,24 +577,25 @@ struct ContentView: View {
                             .font(Font.system(size: 15))
                             .fontWeight(.semibold)
                             .frame(width: nil, height: nil, alignment: .leading)
+                            .foregroundStyle(.blue)
                             .onTapGesture {
                                 getLeaders()
                             }
                             .padding(10)
                         
-                        GeometryReader { geometry in
+                        List {
+                            ForEach ($leaders.indices, id: \.self){ index in
+                                LeaderView(username:$leaders[index].username,eventsAttended:$leaders[index].eventsAttended
+                                )
+                            }
+                        }
+                        /*.frame(width: geometry.size.width,
+                               height: geometry.size.height)*/
+                        /*GeometryReader { geometry in
                             ScrollView {
-                                List {
-                                    ForEach ($leaders.indices, id: \.self){ index in
-                                        LeaderView(username:$leaders[index].username,eventsAttended:$leaders[index].eventsAttended
-                                        )
-                                    }
-                                }
-                                .frame(width: geometry.size.width,
-                                       height: geometry.size.height)
                             }
                             //.frame(height: .infinity)
-                        }
+                        }*/
                     }
                 }
                 //.frame(maxWidth: .infinity, maxHeight: .infinity)
