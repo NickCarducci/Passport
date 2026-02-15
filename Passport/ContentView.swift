@@ -307,13 +307,18 @@ struct ContentView: View {
     func signIn() {
         let provider = OAuthProvider(providerID: "microsoft.com")
         provider.customParameters = ["tenant": "organizations"]
-        
-        provider.getCredentialWith(nil) { credential, error in
+
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let viewController = scene.windows.first?.rootViewController else {
+            return
+        }
+
+        provider.getCredentialWith(viewController as? AuthUIDelegate) { credential, error in
             if let error = error {
                 print("Microsoft Sign-In Error: \(error.localizedDescription)")
                 return
             }
-            
+
             if let credential = credential {
                 Auth.auth().signIn(with: credential) { authResult, error in
                     if let error = error {
