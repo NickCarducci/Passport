@@ -290,6 +290,7 @@ struct ContentView: View {
     @State private var showAuthErrorAlert = false
     @State private var authErrorMessage = "Sign-in failed. Please try again."
     @State private var isSigningIn = false
+    @State private var microsoftProvider: OAuthProvider?
 
     @State private var rocks = [Event]()
     @State private var leaders = [Leader]()
@@ -315,10 +316,13 @@ struct ContentView: View {
     func signIn() {
         isSigningIn = true
         let provider = OAuthProvider(providerID: "microsoft.com")
+        // Keep a strong reference while the web auth session is in flight.
+        microsoftProvider = provider
         provider.customParameters = ["tenant": "organizations"]
 
         guard let viewController = getTopViewController() else {
             isSigningIn = false
+            microsoftProvider = nil
             authErrorMessage = "Could not present the sign-in screen. Please try again."
             showAuthErrorAlert = true
             return
@@ -327,6 +331,7 @@ struct ContentView: View {
         provider.getCredentialWith(viewController) { credential, error in
             DispatchQueue.main.async {
                 isSigningIn = false
+                microsoftProvider = nil
             }
             if let error = error {
                 print("Microsoft Sign-In Error: \(error.localizedDescription)")
@@ -352,6 +357,7 @@ struct ContentView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 6) {
             if isSigningIn {
                 isSigningIn = false
+                microsoftProvider = nil
                 authErrorMessage = "Sign-in did not start. Please try again."
                 showAuthErrorAlert = true
             }
