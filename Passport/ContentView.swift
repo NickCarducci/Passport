@@ -1,8 +1,3 @@
-import AVFoundation
-import CodeScanner
-import Combine
-import Firebase
-import FirebaseAuth
 //
 //  ContentView.swift
 //  Passport
@@ -12,241 +7,18 @@ import FirebaseAuth
 import Foundation
 //import PromiseKit
 import SwiftUI
+import AVFoundation
+import CodeScanner
+import Firebase
+import FirebaseAuth
 
 let db = Firestore.firestore()
 //import FirebaseMessaging
-extension UIViewController: AuthUIDelegate {}
-extension UIScreen {
-    static var screenWidth: CGFloat {
-        (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.width ?? 0
-    }
-    static var screenHeight: CGFloat {
-        (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.height ?? 0
-    }
-    static var screenSize: CGSize {
-        (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.size ?? .zero
-    }
-}
-func dateFromString(date: String) -> Date {
-    // create dateFormatter with UTC time format
-    let dateFormatter = DateFormatter()
-    dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
-    let date = dateFormatter.date(from: date) ?? Date.now
-    return date
-}
-struct ScrollPositionTracker: View {
-    let coordinateSpaceName: String
-    @Binding var isAtEdge: Bool
-
-    var body: some View {
-        GeometryReader { proxy in
-            let frame = proxy.frame(in: .named(coordinateSpaceName))
-            Color.clear
-                .onAppear { update(frame) }
-                .onChange(of: frame) { _, newFrame in update(newFrame) }
-        }
-        .frame(height: 1)
-    }
-
-    private func update(_ frame: CGRect) {
-        // Detect if the bottom marker is within the viewport (plus a small buffer)
-        let isBottomVisible = frame.maxY <= UIScreen.screenHeight + 50
-        if isAtEdge != isBottomVisible {
-            isAtEdge = isBottomVisible
-        }
-    }
-}
-struct EventView: View {
-    @Binding public var title: String
-    @Binding public var location: String
-    @Binding public var date: String
-    @Binding public var descriptionLink: String
-    var onTap: () -> Void
-    @Environment(\.colorScheme) var colorScheme
-    let defaults = UserDefaults.standard
-    var body: some View {
-        Button(action: onTap) {
-            HStack {
-                Text("\(dateFromString(date:date)) \(title): \(location)")
-                    .foregroundStyle(colorScheme == .dark ? .white : .black)
-                    .padding(10)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-struct Message {
-    var message: String
-    var title: String
-}
-extension Message: Decodable {
-    enum CodingKeys: String, CodingKey {
-        case message = "message"
-        case title = "title"
-    }
-    init(from decoder: Decoder) throws {
-        let podcastContainer = try decoder.container(keyedBy: CodingKeys.self)
-        self.message = try podcastContainer.decode(String.self, forKey: .message)
-        self.title = try podcastContainer.decode(String.self, forKey: .title)
-    }
-}
-struct CodeResponse: Decodable {
-    var code: String?
-    var message: String?
-    var title: String?
-}
-struct Event {
-    var id: String
-    var title: String
-    var date: String
-    var location: String
-    var attendees: [String]
-    var descriptionLink: String
-}
-extension Event: Decodable {
-    enum CodingKeys: String, CodingKey {
-        case id = "id"
-        case title = "title"
-        case date = "date"
-        case location = "location"
-        case attendees = "attendees"
-        case descriptionLink = "descriptionLink"
-    }
-    init(from decoder: Decoder) throws {
-        let podcastContainer = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try podcastContainer.decode(String.self, forKey: .id)
-        self.title = try podcastContainer.decode(String.self, forKey: .title)
-        self.date = try podcastContainer.decode(String.self, forKey: .date)
-        self.location = try podcastContainer.decode(String.self, forKey: .location)
-        self.attendees = try podcastContainer.decode(Array.self, forKey: .attendees)
-        self.descriptionLink = try podcastContainer.decode(String.self, forKey: .descriptionLink)
-    }
-}
-struct LeaderView: View {
-    public var studentId: String
-    public var username: String
-    @Binding public var eventsAttended: Int64
-    var body: some View {
-        HStack {
-            Text("\(!username.isEmpty ? username : "Anonymous"): \(eventsAttended)")
-                .padding(10)
-        }
-    }
-}
-struct Leader {
-    var id: String
-    var eventsAttended: Int64
-    var username: String
-}
-extension Leader: Decodable {
-    enum CodingKeys: String, CodingKey {
-        case id = "id"
-        case eventsAttended = "eventsAttended"
-        case username = "username"
-    }
-    init(from decoder: Decoder) throws {
-        let podcastContainer = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try podcastContainer.decode(String.self, forKey: .id)
-        self.eventsAttended = try podcastContainer.decode(Int64.self, forKey: .eventsAttended)
-        self.username = (try? podcastContainer.decode(String.self, forKey: .username)) ?? ""
-    }
-}
-
-struct Leaders {
-    var features: [Leader]
-}
-extension Leaders: Decodable {
-    enum CodingKeys: String, CodingKey {
-        case features = "features"
-    }
-    init(from decoder: Decoder) throws {
-        let podcastContainer = try decoder.container(keyedBy: CodingKeys.self)
-        self.features = try podcastContainer.decode([Leader].self, forKey: .features)
-    }
-}
-
-struct EventDetailView: View {
-    let event: Event
-    @Binding var isPresented: Bool
-    @Environment(\.colorScheme) var colorScheme
-
-    var body: some View {
-        NavigationView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text(event.title)
-                    .font(.title)
-                    .bold()
-                    .padding(.top, 32)
-
-                Text(dateFromString(date: event.date), style: .date)
-                    .font(.body)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Location:")
-                        .font(.headline)
-                    Text(event.location)
-                        .font(.body)
-                }
-
-                Button(action: {
-                    openDirections(to: event.location)
-                }) {
-                    HStack {
-                        Image(systemName: "map.fill")
-                        Text("Get Directions")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                }
-                .padding(.top, 8)
-
-                Spacer()
-
-                Button(action: {
-                    isPresented = false
-                }) {
-                    Text("Back")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .foregroundColor(.blue)
-                }
-            }
-            .padding(24)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(Color(uiColor: .systemBackground))
-            .navigationBarHidden(true)
-        }
-    }
-
-    private func openDirections(to location: String) {
-        let encodedLocation =
-            location.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? location
-
-        // Try to open in Apple Maps
-        if let url = URL(string: "http://maps.apple.com/?q=\(encodedLocation)") {
-            UIApplication.shared.open(url)
-        } else {
-            // Fallback to Google Maps in browser
-            if let url = URL(
-                string: "https://www.google.com/maps/search/?api=1&query=\(encodedLocation)")
-            {
-                UIApplication.shared.open(url)
-            }
-        }
-    }
-}
-enum FirebaseError: Error {
-    case Error
-    case VerificatrionEmpty
-}
 struct ContentView: View {
     //@AppStorage("username") var username: String = ""
 
     @Environment(\.scenePhase) var scenePhase
+    @StateObject private var gestureState = GestureStateManager()
 
     @State var alertCamera = "Go to Settings, Passport, and then Allow Passport to Access: Camera"
     @State var address = ""
@@ -277,65 +49,112 @@ struct ContentView: View {
     @State private var showPermissionAlert = false
     @State private var showScannerErrorAlert = false
     @State private var showDisabledAlert = false
+    @State private var showLogoutConfirm = false
     @State private var authListenerHandle: AuthStateDidChangeListenerHandle?
     @State private var verticalDragOffset: CGFloat = 0
     @State private var horizontalDragOffset: CGFloat = 0
     @State private var isGestureStarted = false
+    @State private var isPullAllowed = false
     #if targetEnvironment(simulator)
         @State private var cameraEnabled = false
     #else
         @State private var cameraEnabled = true
     #endif
-    @State private var isAtBottom = false
+    @State private var isAtTop = false
     @State private var showAuthErrorAlert = false
     @State private var authErrorMessage = "Sign-in failed. Please try again."
     @State private var isSigningIn = false
     @State private var microsoftProvider: OAuthProvider?
+    @State private var authUIDelegate: AuthUIPresenter?
     @State private var authDebug = "idle"
 
     @State private var rocks = [Event]()
     @State private var leaders = [Leader]()
-    @State public var show: String = "home"
+    @State public var underlayMode: UnderlayMode = .home
     @State public var openedEvent: String = ""
     @State public var eventTitle: String = "Scholarship week"
     @State public var eventBody: String = ""
     @State private var showEventDetail = false
     @State private var selectedEvent: Event?
 
-    init() {}
+    init() {
+        #if DEBUG
+            if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+                if FirebaseApp.app() == nil {
+                    FirebaseApp.configure()
+                }
+            }
+        #endif
+    }
 
     func signOut() {
         //if Auth.auth().currentUser != nil {
         do {
             try Auth.auth().signOut()
+            DispatchQueue.main.async {
+                withAnimation(.spring()) {
+                    // Clear view state for clean previews/logins
+                    rocks = []
+                    leaders = []
+                    showEventDetail = false
+                    selectedEvent = nil
+                    eventTitle = "Scholarship week"
+                    eventBody = ""
+                    fullName = ""
+                    username = ""
+                    studentId = ""
+                    addressLine1 = ""
+                    addressLine2 = ""
+                    city = ""
+                    state = ""
+                    zipCode = ""
+                    address = ""
+                    verifiable = false
+                    testing = false
+                    underlayMode = .home
+                    loggedin = false
+                    defaults.removeObject(forKey: "Address")
+                    defaults.removeObject(forKey: "FullName")
+                }
+            }
         } catch {
             print(error)
+            authErrorMessage = error.localizedDescription
+            showAuthErrorAlert = true
         }
         //}
 
     }
-    func signIn() {
+    func signIn(prompt: String? = nil) {
         isSigningIn = true
         authDebug = "starting"
         let provider = OAuthProvider(providerID: "microsoft.com")
         // Keep a strong reference while the web auth session is in flight.
         microsoftProvider = provider
-        provider.customParameters = ["tenant": "organizations"]
+        if let prompt = prompt {
+            provider.customParameters = ["tenant": "organizations", "prompt": prompt]
+        } else {
+            provider.customParameters = ["tenant": "organizations"]
+        }
 
         guard let viewController = getTopViewController() else {
             isSigningIn = false
             microsoftProvider = nil
+            authUIDelegate = nil
             authDebug = "no presenter"
             authErrorMessage = "Could not present the sign-in screen. Please try again."
             showAuthErrorAlert = true
             return
         }
 
+        let uiDelegate = AuthUIPresenter(presentingViewController: viewController)
+        authUIDelegate = uiDelegate
         authDebug = "presenting web auth"
-        provider.getCredentialWith(viewController) { credential, error in
+        provider.getCredentialWith(uiDelegate) { credential, error in
             DispatchQueue.main.async {
                 isSigningIn = false
                 microsoftProvider = nil
+                authUIDelegate = nil
                 authDebug = "callback received"
             }
             if let error = error {
@@ -366,6 +185,7 @@ struct ContentView: View {
             if isSigningIn {
                 isSigningIn = false
                 microsoftProvider = nil
+                authUIDelegate = nil
                 authDebug = "timeout before web auth"
                 authErrorMessage = "Sign-in did not start. Please try again."
                 showAuthErrorAlert = true
@@ -451,37 +271,6 @@ struct ContentView: View {
                     }
                 }
             }
-        /*let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        leaderboard = []
-        let urlString = "https://"
-        let url = URL(string: urlString)!
-        print("searching \(urlString)")
-        //let (data, _) = try await URLSession.shared.data(from: url)
-        
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
-            //if error != nil { return print(error) }
-            if let data = data{
-                do {
-                   let leaders = try decoder.decode(Leaders.self, from: data)
-                    print("found \(leaders)")
-                    //place = try decoder.decode(Place.self, from: data)
-                    //print(place)
-                    DispatchQueue.main.async {
-                        if leaders.features.count == 0 {return}
-                        leaderboard = leaders.features
-                        //print(post)
-                        /*leaders.features.forEach { body in
-        
-                            leaderboard.append(Leader(id: body["id"]as? String ?? "", eventsAttended: body["eventsAttended"] as? Int64 ?? 0))
-                        }*/
-                    }
-                } catch {
-                    print(error)
-                }
-            }
-        }
-        task.resume()*/
     }
     func openEvent(eventId: String) {
 
@@ -549,7 +338,7 @@ struct ContentView: View {
                 DispatchQueue.main.async {
                     withAnimation(.spring()) {
                         self.eventTitle = "already attended."
-                        self.show = "list"
+                        self.underlayMode = .list
                     }
                 }
                 return
@@ -587,7 +376,7 @@ struct ContentView: View {
                     } else {
                         self.eventTitle = messenger.message
                     }
-                    self.show = "list"
+                    self.underlayMode = .list
                 }
             }
         }
@@ -599,31 +388,21 @@ struct ContentView: View {
             if loggedin {
                 // Focal Architecture: Views are layered and moved via offsets
                 profileView
-                    .offset(
-                        x: (show == "profile" ? 0 : -UIScreen.screenWidth) + horizontalDragOffset
-                    )
-                    .zIndex(show == "profile" ? 2 : 1)
+                    .offset(x: profileOffsetX())
+                    .zIndex(1)
 
                 listView
-                    .offset(
-                        x: (show == "profile"
-                            ? UIScreen.screenWidth
-                            : show == "leaderboard" ? -UIScreen.screenWidth : 0)
-                            + horizontalDragOffset
-                    )
-                    .offset(y: (show == "home" ? -UIScreen.screenHeight : 0) + verticalDragOffset)
-                    .zIndex(show == "list" ? 3 : 1)
+                    .offset(x: listOffsetX(), y: listOffsetY())
+                    .zIndex(2)
 
                 homeView
-                    .offset(y: (show == "home" ? 0 : UIScreen.screenHeight) + verticalDragOffset)
-                    .zIndex(show == "home" ? 3 : 1)
+                    .offset(y: homeOffsetY())
+                    .zIndex(1)
 
                 leaderboardView
                     .background(Color(uiColor: .systemBackground))
-                    .offset(
-                        x: (show == "leaderboard" ? 0 : UIScreen.screenWidth) + horizontalDragOffset
-                    )
-                    .zIndex(show == "leaderboard" ? 2 : 1)
+                    .offset(x: leaderboardOffsetX())
+                    .zIndex(1)
 
                 backButton
                     .padding(.bottom, 10)
@@ -633,13 +412,29 @@ struct ContentView: View {
                     .zIndex(4)
             }
 
-            if testing {
-                Text(Auth.auth().currentUser?.email ?? "Not logged in")
-                    .padding()
-                    .background(Color.black.opacity(0.7))
-                    .foregroundColor(.white)
+            // Bottom fade: transparent to opaque white as it approaches the edge
+            QuietButton(action: {
+                withAnimation(.spring()) {
+                    if underlayMode != .list {
+                        underlayMode = .list
+                    } else {
+                        underlayMode = .home
+                    }
+                }
+            }) {
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color.white.opacity(0.0), Color.white.opacity(0.85),
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 140)
+                .contentShape(Rectangle())
             }
+            .zIndex(2)
         }
+        .environmentObject(gestureState)
         .onOpenURL { url in
             _ = Auth.auth().canHandle(url)
         }
@@ -655,7 +450,7 @@ struct ContentView: View {
                 Auth.auth().removeStateDidChangeListener(handle)
             }
         }
-        .gesture(
+        .simultaneousGesture(
             DragGesture()
                 .onChanged { value in
                     let hDrag = value.translation.width
@@ -665,65 +460,108 @@ struct ContentView: View {
                     if !isGestureStarted {
                         if abs(hDrag) > 5 || abs(vDrag) > 5 {
                             isGestureStarted = true
+                            gestureState.startDrag()
+                            let isVertical = abs(vDrag) > abs(hDrag)
+                            let isDraggingDown = vDrag > 0 && isVertical
+                            let isDraggingUp = vDrag < 0 && isVertical
+
+                            // Allow vertical pulls only from list-top upward to bottom row, or from home downward
+                            isPullAllowed =
+                                (underlayMode == .list && isAtTop && isDraggingUp)
+                                || (underlayMode == .home && isDraggingDown)
+                        } else {
+                            return
                         }
                     }
 
-                    if isGestureStarted {
-                        if abs(hDrag) > abs(vDrag) {
-                            // Horizontal Swipe: Profile <-> List <-> Leaderboard
-                            if show == "list" {
-                                horizontalDragOffset = hDrag
-                            } else if show == "profile" && hDrag < 0 {
-                                horizontalDragOffset = hDrag
-                            } else if show == "leaderboard" && hDrag > 0 {
-                                horizontalDragOffset = hDrag
-                            }
-                        } else {
-                            // Vertical Pull: List <-> Camera
-                            if show == "list" && isAtBottom && vDrag < 0 {
-                                verticalDragOffset = vDrag
-                            } else if show == "home" && vDrag > 0 {
-                                verticalDragOffset = vDrag
-                            }
+                    // If vertical becomes dominant after latch, re-evaluate pull allowance.
+                    if abs(vDrag) > abs(hDrag) {
+                        if underlayMode == .list && isAtTop && vDrag < 0 {
+                            isPullAllowed = true
+                        } else if underlayMode == .home && vDrag > 0 {
+                            isPullAllowed = true
+                        }
+                    }
+
+                    if abs(vDrag) > abs(hDrag) {
+                        // Vertical Pull: List <-> Home
+                        if isPullAllowed {
+                            verticalDragOffset = vDrag
+                        }
+                    } else {
+                        // Horizontal Swipe: Profile <-> List <-> Leaderboard
+                        if underlayMode == .list {
+                            horizontalDragOffset = hDrag
+                        } else if underlayMode == .profile && hDrag < 0 {
+                            horizontalDragOffset = hDrag
+                        } else if underlayMode == .leaderboard && hDrag > 0 {
+                            horizontalDragOffset = hDrag
                         }
                     }
                 }
                 .onEnded { value in
                     let hDrag = value.translation.width
                     let vDrag = value.translation.height
+                    var didTriggerNavigation = false
 
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                        if abs(hDrag) > abs(vDrag) {
-                            if show == "list" {
-                                if hDrag < -100 {
-                                    show = "leaderboard"
-                                } else if hDrag > 100 {
-                                    show = "profile"
+                        if abs(hDrag) > abs(vDrag) * 2.0 {
+                            switch underlayMode {
+                            case .list:
+                                if hDrag > 80 {
+                                    underlayMode = .profile
+                                    didTriggerNavigation = true
+                                } else if hDrag < -80 {
+                                    underlayMode = .leaderboard
+                                    didTriggerNavigation = true
                                 }
-                            } else if show == "profile" && hDrag < -100 {
-                                show = "list"
-                            } else if show == "leaderboard" && hDrag > 100 {
-                                show = "list"
+                            case .profile:
+                                if hDrag < -80 {
+                                    underlayMode = .list
+                                    didTriggerNavigation = true
+                                }
+                            case .leaderboard:
+                                if hDrag > 80 {
+                                    underlayMode = .list
+                                    didTriggerNavigation = true
+                                }
+                            case .home:
+                                break
                             }
-                        } else {
-                            if show == "list" && isAtBottom && vDrag < -100 {
-                                show = "home"
-                            } else if show == "home" && vDrag > 100 {
-                                show = "list"
+                        } else if isPullAllowed {
+                            if underlayMode == .list && vDrag < -120 {
+                                underlayMode = .home
+                                didTriggerNavigation = true
+                            } else if underlayMode == .home && vDrag > 120 {
+                                underlayMode = .list
+                                didTriggerNavigation = true
                             }
                         }
                         verticalDragOffset = 0
                         horizontalDragOffset = 0
                         isGestureStarted = false
+                        isPullAllowed = false
                     }
+                    gestureState.endDrag(didTriggerNavigation: didTriggerNavigation)
                 }
         )
         .onChange(of: scenePhase) { oldPhase, newPhase in
             handleScenePhaseChange(newPhase)
         }
-        .onChange(of: show) { oldShow, newShow in
-            if newShow == "home" {
+        .onChange(of: underlayMode) { _, newMode in
+            // Reset edge state on mode change to prevent stale trackers.
+            isAtTop = false
+            if newMode == .home {
                 checkCameraPermissions()
+            }
+        }
+        .onChange(of: loggedin) { _, isLoggedIn in
+            if isLoggedIn && underlayMode == .home {
+                checkCameraPermissions()
+            }
+            if isLoggedIn {
+                getEvents()
+                getLeaders()
             }
         }
         .alert("Sign-In Error", isPresented: $showAuthErrorAlert) {
@@ -737,13 +575,13 @@ struct ContentView: View {
     private var listView: some View {
         VStack(alignment: .leading) {
             HStack {
-                Button(action: { withAnimation(.spring()) { show = "profile" } }) {
+                QuietButton(action: { withAnimation(.spring()) { underlayMode = .profile } }) {
                     Image(systemName: "person.crop.circle").font(.title2)
                 }
                 Spacer()
                 Text("Events").font(.title).bold()
                 Spacer()
-                Button(action: { withAnimation(.spring()) { show = "leaderboard" } }) {
+                QuietButton(action: { withAnimation(.spring()) { underlayMode = .leaderboard } }) {
                     Image(systemName: "list.number").font(.title2)
                 }
             }
@@ -751,6 +589,7 @@ struct ContentView: View {
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
+                    ScrollPositionTracker(.top, in: "listScroll", isAtEdge: $isAtTop)
                     ForEach($rocks.indices, id: \.self) { index in
                         EventView(
                             title: $rocks[index].title,
@@ -763,11 +602,12 @@ struct ContentView: View {
                         )
                         Divider()
                     }
-                    ScrollPositionTracker(coordinateSpaceName: "listScroll", isAtEdge: $isAtBottom)
                 }
+                .padding(.bottom, 70)
             }
             .coordinateSpace(name: "listScroll")
         }
+        .padding(.bottom, 10)
         .onAppear { getEvents() }
         .sheet(isPresented: $showEventDetail) {
             if let event = selectedEvent {
@@ -778,84 +618,130 @@ struct ContentView: View {
 
     @ViewBuilder
     private var profileView: some View {
-        VStack(alignment: .leading) {
-            Text("Profile").font(.title).bold().padding(.horizontal)
-            Form {
-                Section(footer: Text("Your username is shown on the leaderboard.")) {
-                    TextField("Username", text: $username)
-                        .font(Font.system(size: 15))
-                        .fontWeight(.semibold)
-                }
-                Section(footer: Text("Enter your mailing address in case you win a gift card.")) {
-                    TextField(
-                        "Full Name \(defaults.object(forKey: "FullName") as? String ?? "Jane Doe")",
-                        text: $fullName
-                    )
-                    .font(Font.system(size: 15))
-                    .fontWeight(.semibold)
-                    .onChange(of: fullName) { verifiable = false }
-                    HStack {
-                        Text("Student ID")
-                        Spacer()
-                        Text(
-                            Auth.auth().currentUser?.email?.components(separatedBy: "@").first
-                                ?? "Not Signed In"
+        ZStack {
+            VStack(alignment: .leading) {
+                Text("Profile").font(.title).bold().padding(.horizontal)
+                Form {
+                    Section(footer: Text("Your username is shown on the leaderboard.")) {
+                        TextField("Username", text: $username)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                    }
+                    Section(footer: Text("Enter your mailing address in case you win a gift card."))
+                    {
+                        TextField(
+                            "Full Name \(defaults.object(forKey: "FullName") as? String ?? "Jane Doe")",
+                            text: $fullName
                         )
-                        .foregroundColor(.secondary)
-                    }
-                    TextField("Line 1", text: $addressLine1)
                         .font(Font.system(size: 15))
                         .fontWeight(.semibold)
-                        .onChange(of: addressLine1) { verifiable = false }
-                    TextField("Line 2", text: $addressLine2)
-                        .font(Font.system(size: 15))
-                        .fontWeight(.semibold)
-                        .onChange(of: addressLine2) { verifiable = false }
-                    TextField("City", text: $city)
-                        .font(Font.system(size: 15))
-                        .fontWeight(.semibold)
-                        .onChange(of: city) { verifiable = false }
-                    TextField("State", text: $state)
-                        .font(Font.system(size: 15))
-                        .fontWeight(.semibold)
-                        .onChange(of: state) { verifiable = false }
-                    TextField("Zip Code", text: $zipCode)
-                        .font(Font.system(size: 15))
-                        .fontWeight(.semibold)
-                        .onChange(of: zipCode) { verifiable = false }
-                }
-                Section {
-                    Button("Save") {
-                        if addressLine2 == "" {
-                            address = "\(addressLine1), \(city), \(state) \(zipCode)"
-                        } else {
-                            address =
-                                "\(addressLine1), \(addressLine2), \(city), \(state) \(zipCode)"
+                        .onChange(of: fullName) { verifiable = false }
+                        HStack {
+                            Text("Student ID")
+                            Spacer()
+                            Text(
+                                Auth.auth().currentUser?.email?.components(separatedBy: "@").first
+                                    ?? "Not Signed In"
+                            )
+                            .foregroundColor(.secondary)
                         }
-                        defaults.set(address, forKey: "Address")
-                        defaults.set(fullName, forKey: "FullName")
-                        let slug =
-                            Auth.auth().currentUser?.email?.components(separatedBy: "@").first ?? ""
-                        if !slug.isEmpty {
-                            db.collection("leaders").document(slug).setData(
-                                ["username": username], merge: true)
+                        TextField("Line 1", text: $addressLine1)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .onChange(of: addressLine1) { verifiable = false }
+                        TextField("Line 2", text: $addressLine2)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .onChange(of: addressLine2) { verifiable = false }
+                        TextField("City", text: $city)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .onChange(of: city) { verifiable = false }
+                        TextField("State", text: $state)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .onChange(of: state) { verifiable = false }
+                        TextField("Zip Code", text: $zipCode)
+                            .font(Font.system(size: 15))
+                            .fontWeight(.semibold)
+                            .onChange(of: zipCode) { verifiable = false }
+                    }
+                    Section {
+                        QuietButton(action: {
+                            if addressLine2 == "" {
+                                address = "\(addressLine1), \(city), \(state) \(zipCode)"
+                            } else {
+                                address =
+                                    "\(addressLine1), \(addressLine2), \(city), \(state) \(zipCode)"
+                            }
+                            defaults.set(address, forKey: "Address")
+                            defaults.set(fullName, forKey: "FullName")
+                            let slug =
+                                Auth.auth().currentUser?.email?.components(separatedBy: "@").first
+                                ?? ""
+                            if !slug.isEmpty {
+                                db.collection("leaders").document(slug).setData(
+                                    ["username": username], merge: true)
+                            }
+                        }) {
+                            Text("Save")
                         }
                     }
-                }
-                Section {
-                    #if targetEnvironment(simulator)
-                        Toggle("Enable Camera", isOn: .constant(false))
-                            .disabled(true)
-                    #else
-                        Toggle("Enable Camera", isOn: $cameraEnabled)
-                    #endif
-                    Button("Logout", role: .destructive) {
-                        signOut()
+                    Section {
+                        #if targetEnvironment(simulator)
+                            Toggle("Enable Camera", isOn: .constant(false))
+                                .disabled(true)
+                        #else
+                            Toggle("Enable Camera", isOn: $cameraEnabled)
+                        #endif
+                        QuietButton(action: {
+                            showLogoutConfirm = true
+                        }) {
+                            Text("Logout")
+                                .foregroundColor(.red)
+                        }
+                    }
+                    Section {
+                        Color.clear.frame(height: 40)
                     }
                 }
             }
+
+            if testing {
+                QuietButton(action: { signOut() }) {
+                    Color.blue.opacity(0.25)
+                        .overlay(
+                            VStack(spacing: 8) {
+                                Text("Scholarship Week")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                Text("at Monmouth University")
+                                    .font(.subheadline)
+                                Text("Exit Preview Mode")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(.white)
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .contentShape(Rectangle())
+                        .ignoresSafeArea(.container, edges: [.top, .bottom])
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
         }
         .background(Color(uiColor: .systemBackground))
+        .confirmationDialog(
+            "Log out of Passport?",
+            isPresented: $showLogoutConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Log Out", role: .destructive) {
+                signOut()
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+        .padding(.bottom, 10)
         .onAppear { loadUsername() }
     }
 
@@ -903,10 +789,12 @@ struct ContentView: View {
                         studentId: leaders[index].id, username: leaders[index].username,
                         eventsAttended: $leaders[index].eventsAttended)
                 }
+                Color.clear.frame(height: 40)
             }
         }
         .onAppear { getLeaders() }
         .background(Color(uiColor: .systemBackground))
+        .padding(.bottom, 10)
     }
 
     @ViewBuilder
@@ -922,7 +810,7 @@ struct ContentView: View {
                 .font(.title2)
                 .fontWeight(.bold)
 
-            Button(action: { signIn() }) {
+            QuietButton(action: { signIn() }) {
                 HStack {
                     Image(systemName: "envelope.fill")
                     Text(isSigningIn ? "Opening Microsoft..." : "Sign in with Microsoft")
@@ -936,6 +824,20 @@ struct ContentView: View {
             .padding(.horizontal, 40)
             .disabled(isSigningIn)
 
+            QuietButton(action: { signIn(prompt: "select_account") }) {
+                HStack {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                    Text("Switch Account")
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color(uiColor: .secondarySystemBackground))
+                .foregroundColor(.blue)
+                .cornerRadius(10)
+            }
+            .padding(.horizontal, 40)
+            .disabled(isSigningIn)
+
             Text("Auth: \(authDebug)")
                 .font(.caption2)
                 .foregroundColor(.secondary)
@@ -944,8 +846,13 @@ struct ContentView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
 
-            Button("Preview (TDD)") {
-                withAnimation { loggedin = true }
+            QuietButton(action: {
+                withAnimation {
+                    testing = true
+                    loggedin = true
+                }
+            }) {
+                Text("Preview (TDD)")
             }
             .padding(.top, 20)
             .foregroundColor(.blue)
@@ -957,19 +864,18 @@ struct ContentView: View {
     @ViewBuilder
     private var homeView: some View {
         ZStack {
-            if cameraEnabled && !deniedCamera {
+            if underlayMode == .home && cameraEnabled && !deniedCamera {
                 CodeScannerView(codeTypes: [.qr], simulatedData: "PUCYMbQTTVlmTitXH8nO") {
                     response in
                     handleScannerResponse(response)
                 }
-                .edgesIgnoringSafeArea(.all)
             } else {
                 Color(uiColor: .systemBackground).edgesIgnoringSafeArea(.all)
             }
 
             VStack {
                 HStack {
-                    Button(action: { withAnimation(.spring()) { show = "list" } }) {
+                    QuietButton(action: { withAnimation(.spring()) { underlayMode = .list } }) {
                         Image(systemName: "list.dash")
                             .font(.title)
                             .foregroundColor(.blue)
@@ -997,42 +903,51 @@ struct ContentView: View {
                 }
             }
         }
-        .onAppear { checkCameraPermissions() }
         .alert("Simulator Mode", isPresented: $showSimulatorAlert) {
             Button("OK") {
                 withAnimation(.spring()) {
-                    show = "list"
+                    underlayMode = .list
                 }
             }
         } message: {
             Text("Camera is not available on the simulator. Redirecting to event list.")
         }
-        .alert("Camera Permission", isPresented: $showPermissionAlert) {
-            Button("OK") {
+        .alert("Enable Camera Access?", isPresented: $showPermissionAlert) {
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("Back to List", role: .cancel) {
                 withAnimation(.spring()) {
-                    show = "list"
+                    underlayMode = .list
                 }
             }
         } message: {
-            Text("Camera access is required to scan QR codes. Please enable it in Settings.")
+            Text("Camera access is required to scan QR codes.")
         }
         .alert("Scanner Error", isPresented: $showScannerErrorAlert) {
             Button("OK") {
                 withAnimation(.spring()) {
-                    show = "list"
+                    underlayMode = .list
                 }
             }
         } message: {
             Text(alertCamera)
         }
-        .alert("Camera Disabled", isPresented: $showDisabledAlert) {
-            Button("OK") {
+        .alert("Scanner Disabled", isPresented: $showDisabledAlert) {
+            Button("Go to Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("Back to List", role: .cancel) {
                 withAnimation(.spring()) {
-                    show = "list"
+                    underlayMode = .list
                 }
             }
         } message: {
-            Text("Please enable the camera in your profile settings to scan QR codes.")
+            Text("You've previously disabled the camera from viewing QR codes.")
         }
     }
 
@@ -1056,26 +971,81 @@ struct ContentView: View {
 
     @ViewBuilder
     private var backButton: some View {
-        if show != "home" {
-            Text(show == "list" ? "scan" : "back")
-                .font(Font.system(size: 15))
-                .fontWeight(.semibold)
-                .onTapGesture {
-                    withAnimation(.spring()) {
-                        if show != "list" {
-                            show = "list"
-                        } else {
-                            show = "home"
-                        }
+        if underlayMode != .home {
+            QuietButton(action: {
+                withAnimation(.spring()) {
+                    if underlayMode != .list {
+                        underlayMode = .list
+                    } else {
+                        underlayMode = .home
                     }
                 }
+            }) {
+                Text(underlayMode == .list ? "scan" : "back")
+                    .font(Font.system(size: 15))
+                    .fontWeight(.semibold)
+            }
         }
+    }
+
+    private func listOffsetX() -> CGFloat {
+        let base: CGFloat
+        switch underlayMode {
+        case .profile:
+            base = UIScreen.screenWidth
+        case .leaderboard:
+            base = -UIScreen.screenWidth
+        default:
+            base = 0
+        }
+        return base + horizontalDragOffset
+    }
+
+    private func listOffsetY() -> CGFloat {
+        let base = underlayMode == .home ? -UIScreen.screenHeight : 0
+        return base + verticalDragOffset
+    }
+
+    private func profileOffsetX() -> CGFloat {
+        let base = underlayMode == .profile ? 0 : -UIScreen.screenWidth
+        let drag =
+            (underlayMode == .list && horizontalDragOffset > 0)
+                || (underlayMode == .profile && horizontalDragOffset < 0)
+            ? horizontalDragOffset
+            : 0
+        return base + drag
+    }
+
+    private func leaderboardOffsetX() -> CGFloat {
+        let base = underlayMode == .leaderboard ? 0 : UIScreen.screenWidth
+        let drag =
+            (underlayMode == .list && horizontalDragOffset < 0)
+                || (underlayMode == .leaderboard && horizontalDragOffset > 0)
+            ? horizontalDragOffset
+            : 0
+        return base + drag
+    }
+
+    private func homeOffsetY() -> CGFloat {
+        let base = underlayMode == .home ? 0 : UIScreen.screenHeight
+        let drag =
+            (underlayMode == .list && verticalDragOffset < 0)
+                || (underlayMode == .home && verticalDragOffset > 0)
+            ? verticalDragOffset
+            : 0
+        return base + drag
     }
 
     private func handleScenePhaseChange(_ newPhase: ScenePhase) {
         if newPhase == .active {
             print("Active")
-            checkCameraPermissions()
+            if underlayMode == .home {
+                checkCameraPermissions()
+            }
+            verticalDragOffset = 0
+            horizontalDragOffset = 0
+            isGestureStarted = false
+            isPullAllowed = false
         } else if newPhase == .inactive {
             print("Inactive")
         } else if newPhase == .background {
