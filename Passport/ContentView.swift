@@ -7,8 +7,8 @@
 import Foundation
 //import PromiseKit
 import SwiftUI
-import AVFoundation
 import CodeScanner
+import AVFoundation
 import Firebase
 import FirebaseAuth
 
@@ -404,36 +404,63 @@ struct ContentView: View {
                     .offset(x: leaderboardOffsetX())
                     .zIndex(1)
 
-                backButton
-                    .padding(.bottom, 10)
-                    .zIndex(3)
             } else {
                 loginView
                     .zIndex(4)
             }
 
             // Bottom fade: transparent to opaque white as it approaches the edge
-            QuietButton(action: {
-                withAnimation(.spring()) {
-                    if underlayMode != .list {
-                        underlayMode = .list
-                    } else {
-                        underlayMode = .home
-                    }
-                }
-            }) {
+            GeometryReader { proxy in
+                let fadeHeight = 180 + proxy.safeAreaInsets.bottom
                 LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.white.opacity(0.0), Color.white.opacity(0.85),
+                    gradient: Gradient(stops: [
+                        .init(color: Color.white.opacity(0.0), location: 0.0),
+                        .init(color: Color.white.opacity(0.5), location: 0.6),
+                        .init(color: Color.white.opacity(0.85), location: 1.0),
                     ]),
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .frame(height: 140)
-                .contentShape(Rectangle())
+                .frame(height: fadeHeight)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
-            .zIndex(2)
+            .zIndex(3)
+
+            GeometryReader { proxy in
+                let fadeHeight = 180 + proxy.safeAreaInsets.bottom
+                let tapHeight = max(0, fadeHeight - proxy.safeAreaInsets.bottom)
+                QuietButton(action: {
+                    withAnimation(.spring()) {
+                        if underlayMode != .list {
+                            underlayMode = .list
+                        } else {
+                            underlayMode = .home
+                        }
+                    }
+                }) {
+                    VStack(spacing: 8) {
+                        Spacer()
+                        if underlayMode != .home {
+                            Text(underlayMode == .list ? "scan" : "back")
+                                .font(Font.system(size: 15))
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
+                                .padding(.bottom, max(12, proxy.safeAreaInsets.bottom + 8))
+                        }
+                    }
+                    .frame(height: tapHeight)
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            }
+            .safeAreaInset(edge: .bottom) {
+                Color.clear.frame(height: 0)
+            }
+            .zIndex(3)
+
         }
+        .ignoresSafeArea()
         .environmentObject(gestureState)
         .onOpenURL { url in
             _ = Auth.auth().canHandle(url)
@@ -608,6 +635,9 @@ struct ContentView: View {
             .coordinateSpace(name: "listScroll")
         }
         .padding(.bottom, 10)
+        .safeAreaInset(edge: .top) {
+            Color.clear.frame(height: 50)
+        }
         .onAppear { getEvents() }
         .sheet(isPresented: $showEventDetail) {
             if let event = selectedEvent {
@@ -620,7 +650,7 @@ struct ContentView: View {
     private var profileView: some View {
         ZStack {
             VStack(alignment: .leading) {
-                Text("Profile").font(.title).bold().padding(.horizontal)
+                Text("Profile").font(.title).bold().padding()
                 Form {
                     Section(footer: Text("Your username is shown on the leaderboard.")) {
                         TextField("Username", text: $username)
@@ -709,7 +739,7 @@ struct ContentView: View {
 
             if testing {
                 QuietButton(action: { signOut() }) {
-                    Color.blue.opacity(0.25)
+                    Color(red: 0.0, green: 0.27, blue: 0.51).opacity(0.28)
                         .overlay(
                             VStack(spacing: 8) {
                                 Text("Scholarship Week")
@@ -731,6 +761,9 @@ struct ContentView: View {
             }
         }
         .background(Color(uiColor: .systemBackground))
+        .safeAreaInset(edge: .top) {
+            Color.clear.frame(height: 50)
+        }
         .confirmationDialog(
             "Log out of Passport?",
             isPresented: $showLogoutConfirm,
@@ -795,6 +828,9 @@ struct ContentView: View {
         .onAppear { getLeaders() }
         .background(Color(uiColor: .systemBackground))
         .padding(.bottom, 10)
+        .safeAreaInset(edge: .top) {
+            Color.clear.frame(height: 50)
+        }
     }
 
     @ViewBuilder
@@ -874,22 +910,6 @@ struct ContentView: View {
             }
 
             VStack {
-                HStack {
-                    QuietButton(action: { withAnimation(.spring()) { underlayMode = .list } }) {
-                        Image(systemName: "list.dash")
-                            .font(.title)
-                            .foregroundColor(.blue)
-                    }
-                    Spacer()
-                    Text(eventTitle)
-                        .font(.headline)
-                        .foregroundColor(deniedCamera ? .primary : .white)
-                    Spacer()
-                    Color.clear.frame(width: 44, height: 44)
-                }
-                .padding(.top, 60)
-                .padding(.horizontal)
-
                 Spacer()
 
                 if !eventBody.isEmpty {
@@ -902,6 +922,13 @@ struct ContentView: View {
                         .padding(.bottom, 40)
                 }
             }
+        }
+        .safeAreaInset(edge: .top) {
+            Color.clear.frame(height: 50)
+        }
+        .overlay(alignment: .top) {
+            headerView
+                .padding()
         }
         .alert("Simulator Mode", isPresented: $showSimulatorAlert) {
             Button("OK") {
@@ -951,6 +978,36 @@ struct ContentView: View {
         }
     }
 
+    private var headerView: some View {
+        HStack {
+            QuietButton(action: { withAnimation(.spring()) { underlayMode = .list } }) {
+                Image(systemName: "list.dash")
+                    .font(.title)
+                    .foregroundColor(.blue)
+            }
+            Spacer()
+            Text(displayEventTitle)
+                .font(.headline)
+                .foregroundColor(deniedCamera ? .primary : .white)
+            Spacer()
+            Color.clear.frame(width: 44, height: 44)
+        }
+        .safeAreaInset(edge: .top) {
+            Color.clear.frame(height: 50)
+        }
+    }
+
+    private var displayEventTitle: String {
+        if eventTitle == "Scholarship week"
+            && underlayMode == .home
+            && cameraEnabled
+            && !deniedCamera
+        {
+            return "Scan an event-host's QR code now"
+        }
+        return eventTitle
+    }
+
     private func handleScannerResponse(_ response: Result<ScanResult, ScanError>) {
         switch response {
         case .success(let result):
@@ -965,25 +1022,6 @@ struct ContentView: View {
                 deniedCamera = true
                 alertCamera = error.localizedDescription + ". Try again."
                 showScannerErrorAlert = true
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var backButton: some View {
-        if underlayMode != .home {
-            QuietButton(action: {
-                withAnimation(.spring()) {
-                    if underlayMode != .list {
-                        underlayMode = .list
-                    } else {
-                        underlayMode = .home
-                    }
-                }
-            }) {
-                Text(underlayMode == .list ? "scan" : "back")
-                    .font(Font.system(size: 15))
-                    .fontWeight(.semibold)
             }
         }
     }
