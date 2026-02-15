@@ -6,6 +6,7 @@ struct EventView: View {
     @Binding public var date: String
     @Binding public var descriptionLink: String
     var onTap: () -> Void
+    var onLongPress: (() -> Void)? = nil
     @Environment(\.colorScheme) var colorScheme
     let defaults = UserDefaults.standard
     var body: some View {
@@ -18,5 +19,8 @@ struct EventView: View {
             }
         }
         .buttonStyle(PlainButtonStyle())
+        .onLongPressGesture {
+            onLongPress?()
+        }
     }
 }

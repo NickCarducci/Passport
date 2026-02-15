@@ -229,7 +229,6 @@ struct ContentView: View {
                             id: document.documentID, title: document["title"] as? String ?? "",
                             date: document["date"] as? String ?? "",
                             location: document["location"] as? String ?? "",
-                            attendees: document["attendees"] as? [String] ?? [],
                             descriptionLink: document["descriptionLink"] as? String ?? "")
                         //print(post)
 
@@ -290,7 +289,6 @@ struct ContentView: View {
                         id: document.documentID, title: document["title"] as? String ?? "",
                         date: document["date"] as? String ?? "",
                         location: document["location"] as? String ?? "",
-                        attendees: document["attendees"] as? [String] ?? [],
                         descriptionLink: document["descriptionLink"] as? String ?? "")
                     eventTitle = event.title
                     eventBody = event.date + ": " + event.location
@@ -339,6 +337,7 @@ struct ContentView: View {
                     withAnimation(.spring()) {
                         self.eventTitle = "already attended."
                         self.underlayMode = .list
+                        presentEventDetail(eventId: eventId)
                     }
                 }
                 return
@@ -377,6 +376,7 @@ struct ContentView: View {
                         self.eventTitle = messenger.message
                     }
                     self.underlayMode = .list
+                    presentEventDetail(eventId: eventId)
                 }
             }
         }
@@ -625,6 +625,9 @@ struct ContentView: View {
                             descriptionLink: $rocks[index].descriptionLink,
                             onTap: {
                                 handleEventTap(event: rocks[index])
+                            },
+                            onLongPress: {
+                                presentEventDetail(event: rocks[index])
                             }
                         )
                         Divider()
@@ -789,6 +792,31 @@ struct ContentView: View {
         }
     }
 
+    func presentEventDetail(event: Event) {
+        selectedEvent = event
+        showEventDetail = true
+    }
+
+    func presentEventDetail(eventId: String) {
+        if let event = rocks.first(where: { $0.id == eventId }) {
+            presentEventDetail(event: event)
+            return
+        }
+        db.collection("events").document(eventId).getDocument { doc, error in
+            guard let doc = doc, doc.exists else { return }
+            let event = Event(
+                id: doc.documentID,
+                title: doc["title"] as? String ?? "",
+                date: doc["date"] as? String ?? "",
+                location: doc["location"] as? String ?? "",
+                descriptionLink: doc["descriptionLink"] as? String ?? ""
+            )
+            DispatchQueue.main.async {
+                presentEventDetail(event: event)
+            }
+        }
+    }
+
     func handleEventTap(event: Event) {
         if !event.descriptionLink.isEmpty && isValidHttpsUrl(event.descriptionLink) {
             // Open URL in Safari if valid HTTPS
@@ -797,8 +825,7 @@ struct ContentView: View {
             }
         } else {
             // Show event detail view with directions
-            selectedEvent = event
-            showEventDetail = true
+            presentEventDetail(event: event)
         }
     }
 
