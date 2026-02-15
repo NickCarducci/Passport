@@ -291,6 +291,7 @@ struct ContentView: View {
     @State private var authErrorMessage = "Sign-in failed. Please try again."
     @State private var isSigningIn = false
     @State private var microsoftProvider: OAuthProvider?
+    @State private var authDebug = "idle"
 
     @State private var rocks = [Event]()
     @State private var leaders = [Leader]()
@@ -315,6 +316,7 @@ struct ContentView: View {
     }
     func signIn() {
         isSigningIn = true
+        authDebug = "starting"
         let provider = OAuthProvider(providerID: "microsoft.com")
         // Keep a strong reference while the web auth session is in flight.
         microsoftProvider = provider
@@ -323,15 +325,18 @@ struct ContentView: View {
         guard let viewController = getTopViewController() else {
             isSigningIn = false
             microsoftProvider = nil
+            authDebug = "no presenter"
             authErrorMessage = "Could not present the sign-in screen. Please try again."
             showAuthErrorAlert = true
             return
         }
 
+        authDebug = "presenting web auth"
         provider.getCredentialWith(viewController) { credential, error in
             DispatchQueue.main.async {
                 isSigningIn = false
                 microsoftProvider = nil
+                authDebug = "callback received"
             }
             if let error = error {
                 print("Microsoft Sign-In Error: \(error.localizedDescription)")
@@ -343,6 +348,9 @@ struct ContentView: View {
             }
 
             if let credential = credential {
+                DispatchQueue.main.async {
+                    authDebug = "signing into Firebase"
+                }
                 Auth.auth().signIn(with: credential) { authResult, error in
                     if let error = error {
                         print("Firebase Auth Error: \(error.localizedDescription)")
@@ -358,6 +366,7 @@ struct ContentView: View {
             if isSigningIn {
                 isSigningIn = false
                 microsoftProvider = nil
+                authDebug = "timeout before web auth"
                 authErrorMessage = "Sign-in did not start. Please try again."
                 showAuthErrorAlert = true
             }
@@ -926,6 +935,10 @@ struct ContentView: View {
             }
             .padding(.horizontal, 40)
             .disabled(isSigningIn)
+
+            Text("Auth: \(authDebug)")
+                .font(.caption2)
+                .foregroundColor(.secondary)
 
             Text("Please use your student email to sign in.")
                 .font(.caption)
