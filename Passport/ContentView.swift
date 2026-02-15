@@ -1,5 +1,6 @@
 import AVFoundation
 import CodeScanner
+import Combine
 import Firebase
 import FirebaseAuth
 //
@@ -288,6 +289,7 @@ struct ContentView: View {
     @State private var isAtBottom = false
     @State private var showAuthErrorAlert = false
     @State private var authErrorMessage = "Sign-in failed. Please try again."
+    @State private var isSigningIn = false
 
     @State private var rocks = [Event]()
     @State private var leaders = [Leader]()
@@ -311,16 +313,21 @@ struct ContentView: View {
 
     }
     func signIn() {
+        isSigningIn = true
         let provider = OAuthProvider(providerID: "microsoft.com")
         provider.customParameters = ["tenant": "organizations"]
 
-        guard let viewController = getRootViewController() else {
+        guard let viewController = getTopViewController() else {
+            isSigningIn = false
             authErrorMessage = "Could not present the sign-in screen. Please try again."
             showAuthErrorAlert = true
             return
         }
 
         provider.getCredentialWith(viewController) { credential, error in
+            DispatchQueue.main.async {
+                isSigningIn = false
+            }
             if let error = error {
                 print("Microsoft Sign-In Error: \(error.localizedDescription)")
                 DispatchQueue.main.async {
@@ -342,13 +349,32 @@ struct ContentView: View {
                 }
             }
         }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6) {
+            if isSigningIn {
+                isSigningIn = false
+                authErrorMessage = "Sign-in did not start. Please try again."
+                showAuthErrorAlert = true
+            }
+        }
     }
-    private func getRootViewController() -> UIViewController? {
+    private func getTopViewController() -> UIViewController? {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        let keyWindow = scenes
+        let keyWindow =
+            scenes
             .flatMap { $0.windows }
             .first { $0.isKeyWindow }
-        return keyWindow?.rootViewController
+        guard let root = keyWindow?.rootViewController else { return nil }
+        var top = root
+        while let presented = top.presentedViewController {
+            top = presented
+        }
+        if let nav = top as? UINavigationController {
+            return nav.visibleViewController ?? nav
+        }
+        if let tab = top as? UITabBarController {
+            return tab.selectedViewController ?? tab
+        }
+        return top
     }
     func getEvents() {
         if !rocks.isEmpty { return }
@@ -884,7 +910,7 @@ struct ContentView: View {
             Button(action: { signIn() }) {
                 HStack {
                     Image(systemName: "envelope.fill")
-                    Text("Sign in with Microsoft")
+                    Text(isSigningIn ? "Opening Microsoft..." : "Sign in with Microsoft")
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
@@ -893,6 +919,7 @@ struct ContentView: View {
                 .cornerRadius(10)
             }
             .padding(.horizontal, 40)
+            .disabled(isSigningIn)
 
             Text("Please use your student email to sign in.")
                 .font(.caption)
