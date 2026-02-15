@@ -1,3 +1,7 @@
+import AVFoundation
+import CodeScanner
+import Firebase
+import FirebaseAuth
 //
 //  ContentView.swift
 //  Passport
@@ -5,27 +9,24 @@
 //  Created by Nicholas Carducci on 9/7/24.
 //
 import Foundation
-import AVFoundation
 //import PromiseKit
 import SwiftUI
-import Firebase
-import FirebaseAuth
-import CodeScanner
+
 let db = Firestore.firestore()
 //import FirebaseMessaging
 extension UIViewController: AuthUIDelegate {}
-extension UIScreen{
-   static var screenWidth: CGFloat {
-       (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.width ?? 0
-   }
-   static var screenHeight: CGFloat {
-       (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.height ?? 0
-   }
-   static var screenSize: CGSize {
-       (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.size ?? .zero
-   }
+extension UIScreen {
+    static var screenWidth: CGFloat {
+        (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.width ?? 0
+    }
+    static var screenHeight: CGFloat {
+        (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.height ?? 0
+    }
+    static var screenSize: CGSize {
+        (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.size ?? .zero
+    }
 }
-func dateFromString (date: String) -> Date {
+func dateFromString(date: String) -> Date {
     // create dateFormatter with UTC time format
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
@@ -35,7 +36,7 @@ func dateFromString (date: String) -> Date {
 struct ScrollPositionTracker: View {
     let coordinateSpaceName: String
     @Binding var isAtEdge: Bool
-    
+
     var body: some View {
         GeometryReader { proxy in
             let frame = proxy.frame(in: .named(coordinateSpaceName))
@@ -45,7 +46,7 @@ struct ScrollPositionTracker: View {
         }
         .frame(height: 1)
     }
-    
+
     private func update(_ frame: CGRect) {
         // Detect if the bottom marker is within the viewport (plus a small buffer)
         let isBottomVisible = frame.maxY <= UIScreen.screenHeight + 50
@@ -55,16 +56,16 @@ struct ScrollPositionTracker: View {
     }
 }
 struct EventView: View {
-    @Binding public var title:String
-    @Binding public var location:String
-    @Binding public var date:String
-    @Binding public var descriptionLink:String
+    @Binding public var title: String
+    @Binding public var location: String
+    @Binding public var date: String
+    @Binding public var descriptionLink: String
     var onTap: () -> Void
     @Environment(\.colorScheme) var colorScheme
     let defaults = UserDefaults.standard
     var body: some View {
         Button(action: onTap) {
-            HStack{
+            HStack {
                 Text("\(dateFromString(date:date)) \(title): \(location)")
                     .foregroundStyle(colorScheme == .dark ? .white : .black)
                     .padding(10)
@@ -99,7 +100,7 @@ struct Event {
     var title: String
     var date: String
     var location: String
-    var attendees: Array<String>
+    var attendees: [String]
     var descriptionLink: String
 }
 extension Event: Decodable {
@@ -124,9 +125,9 @@ extension Event: Decodable {
 struct LeaderView: View {
     public var studentId: String
     public var username: String
-    @Binding public var eventsAttended:Int64
+    @Binding public var eventsAttended: Int64
     var body: some View {
-        HStack{
+        HStack {
             Text("\(!username.isEmpty ? username : "Anonymous"): \(eventsAttended)")
                 .padding(10)
         }
@@ -152,7 +153,7 @@ extension Leader: Decodable {
 }
 
 struct Leaders {
-    var features: Array<Leader>
+    var features: [Leader]
 }
 extension Leaders: Decodable {
     enum CodingKeys: String, CodingKey {
@@ -221,14 +222,17 @@ struct EventDetailView: View {
     }
 
     private func openDirections(to location: String) {
-        let encodedLocation = location.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? location
+        let encodedLocation =
+            location.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? location
 
         // Try to open in Apple Maps
         if let url = URL(string: "http://maps.apple.com/?q=\(encodedLocation)") {
             UIApplication.shared.open(url)
         } else {
             // Fallback to Google Maps in browser
-            if let url = URL(string: "https://www.google.com/maps/search/?api=1&query=\(encodedLocation)") {
+            if let url = URL(
+                string: "https://www.google.com/maps/search/?api=1&query=\(encodedLocation)")
+            {
                 UIApplication.shared.open(url)
             }
         }
@@ -259,9 +263,9 @@ struct ContentView: View {
     @State var country = ""
     @State var smsTextCode = ""
     #if targetEnvironment(simulator)
-    @State var deniedCamera = true
+        @State var deniedCamera = true
     #else
-    @State var deniedCamera = false
+        @State var deniedCamera = false
     #endif
     @State var loggedin = true
     @State var verificationId = ""
@@ -277,11 +281,13 @@ struct ContentView: View {
     @State private var horizontalDragOffset: CGFloat = 0
     @State private var isGestureStarted = false
     #if targetEnvironment(simulator)
-    @State private var cameraEnabled = false
+        @State private var cameraEnabled = false
     #else
-    @State private var cameraEnabled = true
+        @State private var cameraEnabled = true
     #endif
     @State private var isAtBottom = false
+    @State private var showAuthErrorAlert = false
+    @State private var authErrorMessage = "Sign-in failed. Please try again."
 
     @State private var rocks = [Event]()
     @State private var leaders = [Leader]()
@@ -294,29 +300,33 @@ struct ContentView: View {
 
     init() {}
 
-    func signOut(){
+    func signOut() {
         //if Auth.auth().currentUser != nil {
-            do {
-                try Auth.auth().signOut()
-            }
-            catch {
-              print (error)
-            }
+        do {
+            try Auth.auth().signOut()
+        } catch {
+            print(error)
+        }
         //}
-    
+
     }
     func signIn() {
         let provider = OAuthProvider(providerID: "microsoft.com")
         provider.customParameters = ["tenant": "organizations"]
 
-        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let viewController = scene.windows.first?.rootViewController else {
+        guard let viewController = getRootViewController() else {
+            authErrorMessage = "Could not present the sign-in screen. Please try again."
+            showAuthErrorAlert = true
             return
         }
 
         provider.getCredentialWith(viewController) { credential, error in
             if let error = error {
                 print("Microsoft Sign-In Error: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    authErrorMessage = error.localizedDescription
+                    showAuthErrorAlert = true
+                }
                 return
             }
 
@@ -324,63 +334,82 @@ struct ContentView: View {
                 Auth.auth().signIn(with: credential) { authResult, error in
                     if let error = error {
                         print("Firebase Auth Error: \(error.localizedDescription)")
+                        DispatchQueue.main.async {
+                            authErrorMessage = error.localizedDescription
+                            showAuthErrorAlert = true
+                        }
                     }
                 }
             }
         }
     }
-    func getEvents () {
+    private func getRootViewController() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let keyWindow = scenes
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }
+        return keyWindow?.rootViewController
+    }
+    func getEvents() {
         if !rocks.isEmpty { return }
         let db = Firestore.firestore()
-        db.collection("events")//.whereField("city", isEqualTo: placename)
-            .getDocuments() { (querySnapshot, error) in
-                        if let error = error {
-                                print("Error getting documents: \(error)")
-                        } else {
-                                if querySnapshot!.documents.isEmpty {
-                                    return print("is empty")
-                                }
-                            
-                                for document in querySnapshot!.documents {
-                                        //print("\(document.documentID): \(document.data())")
-                                    let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",location: document["location"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [],descriptionLink: document["descriptionLink"] as? String ?? "")
-                                    //print(post)
-                                    
-                                    rocks.append(event)
-                                    
-                                }
-                            rocks.sort {
-                                dateFromString(date: $0.date) < dateFromString(date: $1.date)
-                            }
-                        }
+        db.collection("events")  //.whereField("city", isEqualTo: placename)
+            .getDocuments { (querySnapshot, error) in
+                if let error = error {
+                    print("Error getting documents: \(error)")
+                } else {
+                    if querySnapshot!.documents.isEmpty {
+                        return print("is empty")
+                    }
+
+                    for document in querySnapshot!.documents {
+                        //print("\(document.documentID): \(document.data())")
+                        let event = Event(
+                            id: document.documentID, title: document["title"] as? String ?? "",
+                            date: document["date"] as? String ?? "",
+                            location: document["location"] as? String ?? "",
+                            attendees: document["attendees"] as? [String] ?? [],
+                            descriptionLink: document["descriptionLink"] as? String ?? "")
+                        //print(post)
+
+                        rocks.append(event)
+
+                    }
+                    rocks.sort {
+                        dateFromString(date: $0.date) < dateFromString(date: $1.date)
+                    }
                 }
+            }
     }
-    func getLeaders () {
+    func getLeaders() {
         leaders = []
         let db = Firestore.firestore()
-        db.collection("leaders")//.whereField("city", isEqualTo: placename)
+        db.collection("leaders")  //.whereField("city", isEqualTo: placename)
             .order(by: "eventsAttended", descending: false)
-            .getDocuments() { (querySnapshot, error) in
-                        if let error = error {
-                                print("Error getting documents: \(error)")
-                        } else {
-                                if querySnapshot!.documents.isEmpty {
-                                    return print("is empty")
-                                }
-                            
-                                for document in querySnapshot!.documents {
-                                        //print("\(document.documentID): \(document.data())")
-                                    let leader = Leader(id: document.documentID, eventsAttended: document["eventsAttended"] as? Int64 ?? 0, username: document["username"] as? String ?? "")
-                                    //print(post)
-                                    
-                                    leaders.append(leader)
-                                    
-                                }
-                            leaders.sort {
-                                $0.eventsAttended > $1.eventsAttended
-                            }
-                        }
+            .getDocuments { (querySnapshot, error) in
+                if let error = error {
+                    print("Error getting documents: \(error)")
+                } else {
+                    if querySnapshot!.documents.isEmpty {
+                        return print("is empty")
+                    }
+
+                    for document in querySnapshot!.documents {
+                        //print("\(document.documentID): \(document.data())")
+                        let leader = Leader(
+                            id: document.documentID,
+                            eventsAttended: document["eventsAttended"] as? Int64 ?? 0,
+                            username: document["username"] as? String ?? "")
+                        //print(post)
+
+                        leaders.append(leader)
+
+                    }
+                    leaders.sort {
+                        $0.eventsAttended > $1.eventsAttended
+                    }
                 }
+            }
         /*let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         leaderboard = []
@@ -402,7 +431,7 @@ struct ContentView: View {
                         leaderboard = leaders.features
                         //print(post)
                         /*leaders.features.forEach { body in
-
+        
                             leaderboard.append(Leader(id: body["id"]as? String ?? "", eventsAttended: body["eventsAttended"] as? Int64 ?? 0))
                         }*/
                     }
@@ -413,24 +442,29 @@ struct ContentView: View {
         }
         task.resume()*/
     }
-    func openEvent (eventId: String) {
-        
+    func openEvent(eventId: String) {
+
         Task {
             db.collection("events").document(eventId)
-              .addSnapshotListener { documentSnapshot, error in
-                guard let document = documentSnapshot else {
-                  print("Error fetching document: \(error!)")
-                  return
+                .addSnapshotListener { documentSnapshot, error in
+                    guard let document = documentSnapshot else {
+                        print("Error fetching document: \(error!)")
+                        return
+                    }
+                    guard let data = document.data() else {
+                        print("Document data was empty.")
+                        return
+                    }
+                    print("Current data: \(data)")
+                    let event = Event(
+                        id: document.documentID, title: document["title"] as? String ?? "",
+                        date: document["date"] as? String ?? "",
+                        location: document["location"] as? String ?? "",
+                        attendees: document["attendees"] as? [String] ?? [],
+                        descriptionLink: document["descriptionLink"] as? String ?? "")
+                    eventTitle = event.title
+                    eventBody = event.date + ": " + event.location
                 }
-                guard let data = document.data() else {
-                  print("Document data was empty.")
-                  return
-                }
-                print("Current data: \(data)")
-                  let event = Event(id: document.documentID,title: document["title"] as? String ?? "", date: document["date"] as? String ?? "",location: document["location"] as? String ?? "",attendees: document["attendees"] as? Array<String> ?? [],descriptionLink: document["descriptionLink"] as? String ?? "")
-                  eventTitle = event.title
-                  eventBody = event.date + ": " + event.location
-              }
         }
     }
     func extractEventId(from raw: String) -> String {
@@ -464,7 +498,8 @@ struct ContentView: View {
             codeReq.httpBody = codeBody
 
             guard let (codeData, _) = try? await URLSession.shared.data(for: codeReq),
-                  let codeRes = try? JSONDecoder().decode(CodeResponse.self, from: codeData) else {
+                let codeRes = try? JSONDecoder().decode(CodeResponse.self, from: codeData)
+            else {
                 print("Code request failed")
                 return
             }
@@ -489,7 +524,7 @@ struct ContentView: View {
                 "eventId": eventId,
                 "code": code,
                 "fullName": fullName,
-                "address": address
+                "address": address,
             ])
             var attendReq = URLRequest(url: URL(string: "https://pass.contact/api/attend")!)
             attendReq.httpMethod = "POST"
@@ -498,7 +533,8 @@ struct ContentView: View {
             attendReq.httpBody = attendBody
 
             guard let (attendData, _) = try? await URLSession.shared.data(for: attendReq),
-                  let messenger = try? JSONDecoder().decode(Message.self, from: attendData) else {
+                let messenger = try? JSONDecoder().decode(Message.self, from: attendData)
+            else {
                 print("Attend request failed")
                 return
             }
@@ -522,21 +558,30 @@ struct ContentView: View {
             if loggedin {
                 // Focal Architecture: Views are layered and moved via offsets
                 profileView
-                    .offset(x: (show == "profile" ? 0 : -UIScreen.screenWidth) + horizontalDragOffset)
+                    .offset(
+                        x: (show == "profile" ? 0 : -UIScreen.screenWidth) + horizontalDragOffset
+                    )
                     .zIndex(show == "profile" ? 2 : 1)
 
                 listView
-                    .offset(x: (show == "profile" ? UIScreen.screenWidth : show == "leaderboard" ? -UIScreen.screenWidth : 0) + horizontalDragOffset)
+                    .offset(
+                        x: (show == "profile"
+                            ? UIScreen.screenWidth
+                            : show == "leaderboard" ? -UIScreen.screenWidth : 0)
+                            + horizontalDragOffset
+                    )
                     .offset(y: (show == "home" ? -UIScreen.screenHeight : 0) + verticalDragOffset)
                     .zIndex(show == "list" ? 3 : 1)
-                
+
                 homeView
                     .offset(y: (show == "home" ? 0 : UIScreen.screenHeight) + verticalDragOffset)
                     .zIndex(show == "home" ? 3 : 1)
 
                 leaderboardView
                     .background(Color(uiColor: .systemBackground))
-                    .offset(x: (show == "leaderboard" ? 0 : UIScreen.screenWidth) + horizontalDragOffset)
+                    .offset(
+                        x: (show == "leaderboard" ? 0 : UIScreen.screenWidth) + horizontalDragOffset
+                    )
                     .zIndex(show == "leaderboard" ? 2 : 1)
 
                 backButton
@@ -546,13 +591,16 @@ struct ContentView: View {
                 loginView
                     .zIndex(4)
             }
-            
+
             if testing {
                 Text(Auth.auth().currentUser?.email ?? "Not logged in")
                     .padding()
                     .background(Color.black.opacity(0.7))
                     .foregroundColor(.white)
             }
+        }
+        .onOpenURL { url in
+            _ = Auth.auth().canHandle(url)
         }
         .onAppear {
             self.authListenerHandle = Auth.auth().addStateDidChangeListener { _, user in
@@ -571,14 +619,14 @@ struct ContentView: View {
                 .onChanged { value in
                     let hDrag = value.translation.width
                     let vDrag = value.translation.height
-                    
+
                     // LATCH LOGIC: Wait for meaningful movement before locking direction
                     if !isGestureStarted {
                         if abs(hDrag) > 5 || abs(vDrag) > 5 {
                             isGestureStarted = true
                         }
                     }
-                    
+
                     if isGestureStarted {
                         if abs(hDrag) > abs(vDrag) {
                             // Horizontal Swipe: Profile <-> List <-> Leaderboard
@@ -602,20 +650,26 @@ struct ContentView: View {
                 .onEnded { value in
                     let hDrag = value.translation.width
                     let vDrag = value.translation.height
-                    
+
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                         if abs(hDrag) > abs(vDrag) {
                             if show == "list" {
-                                if hDrag < -100 { show = "leaderboard" }
-                                else if hDrag > 100 { show = "profile" }
+                                if hDrag < -100 {
+                                    show = "leaderboard"
+                                } else if hDrag > 100 {
+                                    show = "profile"
+                                }
                             } else if show == "profile" && hDrag < -100 {
                                 show = "list"
                             } else if show == "leaderboard" && hDrag > 100 {
                                 show = "list"
                             }
                         } else {
-                            if show == "list" && isAtBottom && vDrag < -100 { show = "home" }
-                            else if show == "home" && vDrag > 100 { show = "list" }
+                            if show == "list" && isAtBottom && vDrag < -100 {
+                                show = "home"
+                            } else if show == "home" && vDrag > 100 {
+                                show = "list"
+                            }
                         }
                         verticalDragOffset = 0
                         horizontalDragOffset = 0
@@ -630,6 +684,11 @@ struct ContentView: View {
             if newShow == "home" {
                 checkCameraPermissions()
             }
+        }
+        .alert("Sign-In Error", isPresented: $showAuthErrorAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(authErrorMessage)
         }
     }
 
@@ -687,15 +746,21 @@ struct ContentView: View {
                         .fontWeight(.semibold)
                 }
                 Section(footer: Text("Enter your mailing address in case you win a gift card.")) {
-                    TextField("Full Name \(defaults.object(forKey: "FullName") as? String ?? "Jane Doe")", text: $fullName)
-                        .font(Font.system(size: 15))
-                        .fontWeight(.semibold)
-                        .onChange(of: fullName) { verifiable = false }
+                    TextField(
+                        "Full Name \(defaults.object(forKey: "FullName") as? String ?? "Jane Doe")",
+                        text: $fullName
+                    )
+                    .font(Font.system(size: 15))
+                    .fontWeight(.semibold)
+                    .onChange(of: fullName) { verifiable = false }
                     HStack {
                         Text("Student ID")
                         Spacer()
-                        Text(Auth.auth().currentUser?.email?.components(separatedBy: "@").first ?? "Not Signed In")
-                            .foregroundColor(.secondary)
+                        Text(
+                            Auth.auth().currentUser?.email?.components(separatedBy: "@").first
+                                ?? "Not Signed In"
+                        )
+                        .foregroundColor(.secondary)
                     }
                     TextField("Line 1", text: $addressLine1)
                         .font(Font.system(size: 15))
@@ -723,22 +788,25 @@ struct ContentView: View {
                         if addressLine2 == "" {
                             address = "\(addressLine1), \(city), \(state) \(zipCode)"
                         } else {
-                            address = "\(addressLine1), \(addressLine2), \(city), \(state) \(zipCode)"
+                            address =
+                                "\(addressLine1), \(addressLine2), \(city), \(state) \(zipCode)"
                         }
                         defaults.set(address, forKey: "Address")
                         defaults.set(fullName, forKey: "FullName")
-                        let slug = Auth.auth().currentUser?.email?.components(separatedBy: "@").first ?? ""
+                        let slug =
+                            Auth.auth().currentUser?.email?.components(separatedBy: "@").first ?? ""
                         if !slug.isEmpty {
-                            db.collection("leaders").document(slug).setData(["username": username], merge: true)
+                            db.collection("leaders").document(slug).setData(
+                                ["username": username], merge: true)
                         }
                     }
                 }
                 Section {
                     #if targetEnvironment(simulator)
-                    Toggle("Enable Camera", isOn: .constant(false))
-                        .disabled(true)
+                        Toggle("Enable Camera", isOn: .constant(false))
+                            .disabled(true)
                     #else
-                    Toggle("Enable Camera", isOn: $cameraEnabled)
+                        Toggle("Enable Camera", isOn: $cameraEnabled)
                     #endif
                     Button("Logout", role: .destructive) {
                         signOut()
@@ -776,8 +844,9 @@ struct ContentView: View {
 
     func isValidHttpsUrl(_ urlString: String) -> Bool {
         guard let url = URL(string: urlString),
-              let scheme = url.scheme,
-              let host = url.host else {
+            let scheme = url.scheme,
+            let host = url.host
+        else {
             return false
         }
         return scheme == "https" && !host.isEmpty
@@ -789,7 +858,9 @@ struct ContentView: View {
             Text("Leaderboard").font(.title).bold().padding()
             List {
                 ForEach($leaders.indices, id: \.self) { index in
-                    LeaderView(studentId: leaders[index].id, username: leaders[index].username, eventsAttended: $leaders[index].eventsAttended)
+                    LeaderView(
+                        studentId: leaders[index].id, username: leaders[index].username,
+                        eventsAttended: $leaders[index].eventsAttended)
                 }
             }
         }
@@ -805,11 +876,11 @@ struct ContentView: View {
                 .scaledToFit()
                 .frame(width: 200)
                 .padding(.bottom, 50)
-            
+
             Text("Monmouth University Passport")
                 .font(.title2)
                 .fontWeight(.bold)
-            
+
             Button(action: { signIn() }) {
                 HStack {
                     Image(systemName: "envelope.fill")
@@ -822,11 +893,11 @@ struct ContentView: View {
                 .cornerRadius(10)
             }
             .padding(.horizontal, 40)
-            
+
             Text("Please use your student email to sign in.")
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
+
             Button("Preview (TDD)") {
                 withAnimation { loggedin = true }
             }
@@ -841,14 +912,15 @@ struct ContentView: View {
     private var homeView: some View {
         ZStack {
             if cameraEnabled && !deniedCamera {
-                CodeScannerView(codeTypes: [.qr], simulatedData: "PUCYMbQTTVlmTitXH8nO") { response in
+                CodeScannerView(codeTypes: [.qr], simulatedData: "PUCYMbQTTVlmTitXH8nO") {
+                    response in
                     handleScannerResponse(response)
                 }
                 .edgesIgnoringSafeArea(.all)
             } else {
                 Color(uiColor: .systemBackground).edgesIgnoringSafeArea(.all)
             }
-            
+
             VStack {
                 HStack {
                     Button(action: { withAnimation(.spring()) { show = "list" } }) {
@@ -865,13 +937,15 @@ struct ContentView: View {
                 }
                 .padding(.top, 60)
                 .padding(.horizontal)
-                
+
                 Spacer()
-                
+
                 if !eventBody.isEmpty {
                     Text(eventBody)
                         .padding()
-                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.6)))
+                        .background(
+                            RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.6))
+                        )
                         .foregroundColor(.white)
                         .padding(.bottom, 40)
                 }
@@ -967,7 +1041,7 @@ struct ContentView: View {
         Task {
             // Delay to allow the view transition to complete so the home screen is visible behind the alert
             try? await Task.sleep(nanoseconds: 500_000_000)
-            
+
             if !cameraEnabled {
                 await MainActor.run {
                     deniedCamera = true
@@ -975,42 +1049,41 @@ struct ContentView: View {
                 }
                 return
             }
-            
+
             #if targetEnvironment(simulator)
-            await MainActor.run {
-                showSimulatorAlert = true
-            }
-            #else
-            let status = AVCaptureDevice.authorizationStatus(for: .video)
-            if status == .authorized {
                 await MainActor.run {
-                    withAnimation(.spring()) {
-                        deniedCamera = false
-                    }
+                    showSimulatorAlert = true
                 }
-            } else if status == .notDetermined {
-                let granted = await AVCaptureDevice.requestAccess(for: .video)
-                await MainActor.run {
-                    withAnimation(.spring()) {
-                        deniedCamera = !granted
-                        if !granted {
+            #else
+                let status = AVCaptureDevice.authorizationStatus(for: .video)
+                if status == .authorized {
+                    await MainActor.run {
+                        withAnimation(.spring()) {
+                            deniedCamera = false
+                        }
+                    }
+                } else if status == .notDetermined {
+                    let granted = await AVCaptureDevice.requestAccess(for: .video)
+                    await MainActor.run {
+                        withAnimation(.spring()) {
+                            deniedCamera = !granted
+                            if !granted {
+                                showPermissionAlert = true
+                            }
+                        }
+                    }
+                } else {
+                    await MainActor.run {
+                        withAnimation(.spring()) {
+                            deniedCamera = true
                             showPermissionAlert = true
                         }
                     }
                 }
-            } else {
-                await MainActor.run {
-                    withAnimation(.spring()) {
-                        deniedCamera = true
-                        showPermissionAlert = true
-                    }
-                }
-            }
             #endif
         }
     }
 }
-
 
 #Preview {
     ContentView()
