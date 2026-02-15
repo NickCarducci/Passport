@@ -13,6 +13,7 @@ import FirebaseAuth
 import CodeScanner
 let db = Firestore.firestore()
 //import FirebaseMessaging
+extension UIViewController: AuthUIDelegate {}
 extension UIScreen{
    static var screenWidth: CGFloat {
        (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.width ?? 0
@@ -313,7 +314,7 @@ struct ContentView: View {
             return
         }
 
-        provider.getCredentialWith(viewController as? AuthUIDelegate) { credential, error in
+        provider.getCredentialWith(viewController) { credential, error in
             if let error = error {
                 print("Microsoft Sign-In Error: \(error.localizedDescription)")
                 return
