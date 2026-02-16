@@ -23,13 +23,25 @@
 		B10C0DE1C0DE000000000205 /* GestureStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000105 /* GestureStateManager.swift */; };
 		B10C0DE1C0DE000000000206 /* AuthUIPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000106 /* AuthUIPresenter.swift */; };
 		B10C0DE1C0DE000000000207 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000107 /* Message.swift */; };
-		B10C0DE1C0DE000000000208 /* CodeResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000108 /* CodeResponse.swift */; };
 		B10C0DE1C0DE000000000209 /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000109 /* Event.swift */; };
 		B10C0DE1C0DE00000000020A /* Leader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE00000000010A /* Leader.swift */; };
 		B10C0DE1C0DE00000000020B /* UnderlayMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE00000000010B /* UnderlayMode.swift */; };
 		B10C0DE1C0DE00000000020C /* EventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE00000000010C /* EventView.swift */; };
 		B10C0DE1C0DE00000000020D /* LeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE00000000010D /* LeaderView.swift */; };
 		B10C0DE1C0DE00000000020E /* EventDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE00000000010E /* EventDetailView.swift */; };
+		B10C0DE1C0DE00000000020F /* CameraScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE00000000010F /* CameraScannerView.swift */; };
+		B10C0DE1C0DE000000000210 /* URLUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000110 /* URLUtils.swift */; };
+		B10C0DE1C0DE000000000211 /* UIApplication+TopViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000111 /* UIApplication+TopViewController.swift */; };
+		B10C0DE1C0DE000000000212 /* ListViewBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000112 /* ListViewBuilder.swift */; };
+		B10C0DE1C0DE000000000217 /* ProfileViewBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000117 /* ProfileViewBuilder.swift */; };
+		B10C0DE1C0DE000000000218 /* LeaderboardViewBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000118 /* LeaderboardViewBuilder.swift */; };
+		B10C0DE1C0DE000000000219 /* LoginViewBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000119 /* LoginViewBuilder.swift */; };
+		B10C0DE1C0DE00000000021A /* HomeViewBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE00000000011A /* HomeViewBuilder.swift */; };
+		B10C0DE1C0DE00000000021B /* HeaderViewBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE00000000011B /* HeaderViewBuilder.swift */; };
+		B10C0DE1C0DE000000000213 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000113 /* AuthService.swift */; };
+		B10C0DE1C0DE000000000214 /* DataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000114 /* DataService.swift */; };
+		B10C0DE1C0DE000000000215 /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000115 /* CameraService.swift */; };
+		B10C0DE1C0DE000000000216 /* LayoutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10C0DE1C0DE000000000116 /* LayoutService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,13 +60,25 @@
 		B10C0DE1C0DE000000000105 /* GestureStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GestureStateManager.swift; sourceTree = "<group>"; };
 		B10C0DE1C0DE000000000106 /* AuthUIPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthUIPresenter.swift; sourceTree = "<group>"; };
 		B10C0DE1C0DE000000000107 /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
-		B10C0DE1C0DE000000000108 /* CodeResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeResponse.swift; sourceTree = "<group>"; };
 		B10C0DE1C0DE000000000109 /* Event.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Event.swift; sourceTree = "<group>"; };
 		B10C0DE1C0DE00000000010A /* Leader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leader.swift; sourceTree = "<group>"; };
 		B10C0DE1C0DE00000000010B /* UnderlayMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnderlayMode.swift; sourceTree = "<group>"; };
 		B10C0DE1C0DE00000000010C /* EventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventView.swift; sourceTree = "<group>"; };
 		B10C0DE1C0DE00000000010D /* LeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderView.swift; sourceTree = "<group>"; };
 		B10C0DE1C0DE00000000010E /* EventDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDetailView.swift; sourceTree = "<group>"; };
+		B10C0DE1C0DE00000000010F /* CameraScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraScannerView.swift; sourceTree = "<group>"; };
+		B10C0DE1C0DE000000000110 /* URLUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLUtils.swift; sourceTree = "<group>"; };
+		B10C0DE1C0DE000000000111 /* UIApplication+TopViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIApplication+TopViewController.swift"; sourceTree = "<group>"; };
+		B10C0DE1C0DE000000000112 /* ListViewBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewBuilder.swift; sourceTree = "<group>"; };
+		B10C0DE1C0DE000000000117 /* ProfileViewBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewBuilder.swift; sourceTree = "<group>"; };
+		B10C0DE1C0DE000000000118 /* LeaderboardViewBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardViewBuilder.swift; sourceTree = "<group>"; };
+		B10C0DE1C0DE000000000119 /* LoginViewBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewBuilder.swift; sourceTree = "<group>"; };
+		B10C0DE1C0DE00000000011A /* HomeViewBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewBuilder.swift; sourceTree = "<group>"; };
+		B10C0DE1C0DE00000000011B /* HeaderViewBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderViewBuilder.swift; sourceTree = "<group>"; };
+		B10C0DE1C0DE000000000113 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		B10C0DE1C0DE000000000114 /* DataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataService.swift; sourceTree = "<group>"; };
+		B10C0DE1C0DE000000000115 /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
+		B10C0DE1C0DE000000000116 /* LayoutService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,6 +120,7 @@
 				B10C0DE1C0DE000000000010 /* Models */,
 				B10C0DE1C0DE000000000014 /* Services */,
 				B10C0DE1C0DE000000000013 /* Utilities */,
+				B10C0DE1C0DE000000000120 /* ViewBuilders */,
 				B10C0DE1C0DE000000000011 /* Views */,
 				A3B95C632D8EF65900AD0FE9 /* GoogleService-Info.plist */,
 				A38850E42C8D00F300CCBF22 /* Info.plist */,
@@ -111,7 +136,6 @@
 		B10C0DE1C0DE000000000010 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				B10C0DE1C0DE000000000108 /* CodeResponse.swift */,
 				B10C0DE1C0DE000000000109 /* Event.swift */,
 				B10C0DE1C0DE00000000010A /* Leader.swift */,
 				B10C0DE1C0DE000000000107 /* Message.swift */,
@@ -123,6 +147,7 @@
 		B10C0DE1C0DE000000000011 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				B10C0DE1C0DE00000000010F /* CameraScannerView.swift */,
 				B10C0DE1C0DE00000000010E /* EventDetailView.swift */,
 				B10C0DE1C0DE00000000010C /* EventView.swift */,
 				B10C0DE1C0DE00000000010D /* LeaderView.swift */,
@@ -144,8 +169,23 @@
 			children = (
 				B10C0DE1C0DE000000000101 /* DateUtils.swift */,
 				B10C0DE1C0DE000000000102 /* UIScreen+Size.swift */,
+				B10C0DE1C0DE000000000110 /* URLUtils.swift */,
+				B10C0DE1C0DE000000000111 /* UIApplication+TopViewController.swift */,
 			);
 			path = Utilities;
+			sourceTree = "<group>";
+		};
+		B10C0DE1C0DE000000000120 /* ViewBuilders */ = {
+			isa = PBXGroup;
+			children = (
+				B10C0DE1C0DE000000000112 /* ListViewBuilder.swift */,
+				B10C0DE1C0DE000000000117 /* ProfileViewBuilder.swift */,
+				B10C0DE1C0DE000000000118 /* LeaderboardViewBuilder.swift */,
+				B10C0DE1C0DE000000000119 /* LoginViewBuilder.swift */,
+				B10C0DE1C0DE00000000011A /* HomeViewBuilder.swift */,
+				B10C0DE1C0DE00000000011B /* HeaderViewBuilder.swift */,
+			);
+			path = ViewBuilders;
 			sourceTree = "<group>";
 		};
 		B10C0DE1C0DE000000000014 /* Services */ = {
@@ -153,6 +193,10 @@
 			children = (
 				B10C0DE1C0DE000000000106 /* AuthUIPresenter.swift */,
 				B10C0DE1C0DE000000000105 /* GestureStateManager.swift */,
+				B10C0DE1C0DE000000000113 /* AuthService.swift */,
+				B10C0DE1C0DE000000000114 /* DataService.swift */,
+				B10C0DE1C0DE000000000115 /* CameraService.swift */,
+				B10C0DE1C0DE000000000116 /* LayoutService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -260,13 +304,25 @@
 				B10C0DE1C0DE000000000205 /* GestureStateManager.swift in Sources */,
 				B10C0DE1C0DE000000000206 /* AuthUIPresenter.swift in Sources */,
 				B10C0DE1C0DE000000000207 /* Message.swift in Sources */,
-				B10C0DE1C0DE000000000208 /* CodeResponse.swift in Sources */,
 				B10C0DE1C0DE000000000209 /* Event.swift in Sources */,
 				B10C0DE1C0DE00000000020A /* Leader.swift in Sources */,
 				B10C0DE1C0DE00000000020B /* UnderlayMode.swift in Sources */,
 				B10C0DE1C0DE00000000020C /* EventView.swift in Sources */,
 				B10C0DE1C0DE00000000020D /* LeaderView.swift in Sources */,
 				B10C0DE1C0DE00000000020E /* EventDetailView.swift in Sources */,
+				B10C0DE1C0DE00000000020F /* CameraScannerView.swift in Sources */,
+				B10C0DE1C0DE000000000210 /* URLUtils.swift in Sources */,
+				B10C0DE1C0DE000000000211 /* UIApplication+TopViewController.swift in Sources */,
+				B10C0DE1C0DE000000000212 /* ListViewBuilder.swift in Sources */,
+				B10C0DE1C0DE000000000217 /* ProfileViewBuilder.swift in Sources */,
+				B10C0DE1C0DE000000000218 /* LeaderboardViewBuilder.swift in Sources */,
+				B10C0DE1C0DE000000000219 /* LoginViewBuilder.swift in Sources */,
+				B10C0DE1C0DE00000000021A /* HomeViewBuilder.swift in Sources */,
+				B10C0DE1C0DE00000000021B /* HeaderViewBuilder.swift in Sources */,
+				B10C0DE1C0DE000000000213 /* AuthService.swift in Sources */,
+				B10C0DE1C0DE000000000214 /* DataService.swift in Sources */,
+				B10C0DE1C0DE000000000215 /* CameraService.swift in Sources */,
+				B10C0DE1C0DE000000000216 /* LayoutService.swift in Sources */,
 				A32A20252C8C8D390059417C /* ContentView.swift in Sources */,
 				A32A20232C8C8D390059417C /* PassportApp.swift in Sources */,
 			);
